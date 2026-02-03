@@ -1,0 +1,24 @@
+# Historial y workspace de R
+.Rhistory
+.RData
+.Ruserdata
+
+# RStudio
+.Rproj.user/
+
+# Archivos temporales
+*.log
+*.tmp
+*.bak
+
+# Cache de Shiny
+rsconnect/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Dependencias compiladas
+*.so
+*.dll
+*.o
