@@ -1,0 +1,23 @@
+# -----------------------------
+# 1. CARGA DE LIBRERÍAS
+# -----------------------------
+library(shiny)
+library(shiny.semantic)
+library(bnlearn)
+library(Rgraphviz)
+
+# Cargar scripts de UI
+source("ui/ui_main.R")
+source("ui/ui_sidebar.R")
+source("ui/ui_results.R")
+
+# Cargar scripts de Server
+source("server/server_main.R")
+source("server/server_bnlearn.R")
+source("server/server_inference.R")
+
+# -----------------------------
+# 2. EJECUTAR LA APP
+# -----------------------------
+shinyApp(ui, server)
+
