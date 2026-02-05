@@ -19,5 +19,4 @@ source("server/server_inference.R")
 # -----------------------------
 # 2. EJECUTAR LA APP
 # -----------------------------
-shinyApp(ui, server)
-
+shinyApp(ui = ui_main() , server = server_main)
