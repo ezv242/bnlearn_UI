@@ -15,6 +15,7 @@ source("ui/ui_results.R")
 source("server/server_main.R")
 source("server/server_bnlearn.R")
 source("server/server_inference.R")
+source("server/server_parameters.R")
 
 # -----------------------------
 # 2. EJECUTAR LA APP

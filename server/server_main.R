@@ -12,5 +12,8 @@ server_main <- function(input, output, session) {
   
   # Llamar a la parte de inferencia
   server_inference(input, output, session)
+
+  #Llamar  la parte de ajuste de parámetros
+  server_parameters(input, output, session)
   
 }

@@ -4,5 +4,6 @@ learn_bn <- function(data, algorithm = "hc") {
          "hc" = hc(data),
          "tabu" = tabu(data),
          "gs" = gs(data),
-         "iamb" = iamb(data))
+         "iamb" = iamb(data),
+         "mmhc" = mmhc(data))
 }

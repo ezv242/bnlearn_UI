@@ -15,6 +15,7 @@ server_bnlearn <- function(input, output, session) {
                  "hc" = hc(data),
                  "tabu" = tabu(data),
                  "gs" = gs(data),
+                 "mmhc" = mmhc(data),
                  "iamb" = iamb(data))
     bn
   })
@@ -26,7 +27,7 @@ server_bnlearn <- function(input, output, session) {
   })
 
   # Guardar el modelo en session$userData para inferencia
-  observe({
+  observeEvent(bn_model(), {
     session$userData$bn_model <- bn_model()
   })
 }

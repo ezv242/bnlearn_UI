@@ -2,15 +2,34 @@
 server_inference <- function(input, output, session) {
 
   inference_result <- eventReactive(input$run_inference, {
-    req(session$userData$bn_model)
-    bn <- session$userData$bn_model
+    req(session$userData$bn_fitted)
+    fitted <- session$userData$bn_fitted
 
     # Ejemplo de evidencia y nodo de consulta
     # Ajusta según tus inputs reales
-    evidence <- list()  # por ejemplo: list(X1 = 1)
-    query_node <- "X2"  # ejemplo
+    event_expr <- tryCatch(parse(text = input$event)[[1]], error = function(e) NULL)
+    evidence_expr <- tryCatch(parse(text = input$evidence)[[1]], error = function(e) NULL)
+    req(event_expr, evidence_expr)  # detiene si son inválidos
 
-    cpquery(bn, event = (get(query_node) == 1), evidence = evidence)
+    method_inference <- input$method_inference
+
+    # Construir lista de argumentos dinámicamente
+    args <- list(fitted = fitted, event = event_expr, evidence = evidence_expr, 
+                 method = method_inference)
+
+    # Si método exact, agregar n_samples
+    if (method_inference == "lw") {
+      args$n <- input$n_samples
+    } 
+
+    # Ejecutar bnlearn::cpquery con argumentos dinámicos
+    result <- tryCatch({
+      do.call(cpquery, args)
+    }, error = function(e) {
+      return("Error en la inferencia: " + e$message)
+    })
+    result
+
   })
 
   output$inference_output <- renderText({
