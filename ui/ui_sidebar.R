@@ -1,5 +1,8 @@
 # ui/ui_sidebar.R
 ui_sidebar <- function() {
+
+  # CARGAR DATOS: El sidebar contiene inputs para cargar datos, 
+  # seleccionar algoritmos, ajustar parámetros y realizar inferencia
   div(style = "display: flex; flex-direction: column; gap: 5px;",
       div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
@@ -14,6 +17,8 @@ ui_sidebar <- function() {
           )
       ),
       
+      # AJUSTE PARÁMETROS: Parámetros de ajuste y de inferencia, 
+      # con visibilidad condicional según el tipo de datos
       div(class = "ui segment", 
       style = "display: flex; flex-direction: column; gap: 10px;",
       "Método de ajuste de parámetros:",
@@ -33,19 +38,23 @@ ui_sidebar <- function() {
           ),
           conditionalPanel(
             condition = "output.data_type_hidden == 'mixed'",
-            checkboxInput("replace_undentifiable", 
-                          "replace_undentifiable", value = TRUE)
+            checkboxInput("replace_unidentifiable", 
+                          "replace_unidentifiable", value = TRUE)
           ),
           checkboxInput("keep_fitted", "Keep_fitted", value = TRUE),
           checkboxInput("debug", "debug", value = FALSE),
       ),
 
+      # INFERENCIA: Inferencia, con inputs para evento, evidencia, 
+      # método y número de muestras
       div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
 
           textInput("event", "Event"),
           textInput("evidence", "Evidence"),
-          #El lw funciona con redes grandes y continuas, el exact con redes pequeñas y discretas
+
+          #El lw funciona con redes grandes y continuas, 
+          # el exact con redes pequeñas y discretas
             "Método de inferencia:",
             dropdown_input("method_inference", 
                           choices = c("lw", "exact")),
