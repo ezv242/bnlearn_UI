@@ -1,5 +1,5 @@
 # server/server_parameters.R
-server_parameters <- function(input, output, session) {
+server_parameters <- function(input, output, session, shared_data) {
 
 # ReactiveVal para exponer el tipo a la UI 
 # (discreta, continua, mixta) (invisible)
@@ -9,10 +9,9 @@ data_type_r <- reactiveVal(NULL)
 # para actualizar el tipo de datos y los parámetros dinámicos
 observe({
 
-  bn <- session$userData$bn_model
-  dataset_reactive <- session$userData$dataset
-  req(dataset_reactive, bn)  # Esperar a que tanto dataset como bn estén disponibles
-  data <- req(dataset_reactive())
+  bn <- shared_data$network
+  data <- shared_data$dataset
+  req(data, bn)  # Esperar a que tanto dataset como network estén disponibles
 
   # Validar que el dataset y el modelo estén disponibles
   output$server_params_error <- renderText({
@@ -33,15 +32,15 @@ observe({
   }
 
   # Se comprueba el tipo de datos y se almacena en data_type_r y
-  # session$userData$data_type
+  # shared_data$data_type
   if(all(sapply(data, is.factor))){
-    session$userData$data_type <- "discrete"
+    shared_data$data_type <- "discrete"
     data_type_r("discrete")
   } else if(all(sapply(data, is.numeric))){
-    session$userData$data_type <- "continuous"
+    shared_data$data_type <- "continuous"
     data_type_r("continuous")
   } else {
-    session$userData$data_type <- "mixed"
+    shared_data$data_type <- "mixed"
     data_type_r("mixed")
   }
 
@@ -58,7 +57,7 @@ observe({
   fitted <- do.call(bn.fit, args)
 
   # Guardar el modelo ajustado
-  session$userData$bn_fitted <- fitted
+  shared_data$bn_fitted <- fitted
 })
 
 # Output oculto para usar en conditionalPanel
@@ -67,7 +66,15 @@ outputOptions(output, "data_type_hidden", suspendWhenHidden = FALSE)
 
 # Mostrar el modelo ajustado
 output$fitted_output <- renderPrint({
-  req(session$userData$bn_fitted)   # Espera a que bn_fitted exista
-  session$userData$bn_fitted
+  req(shared_data$bn_fitted)   # Espera a que bn_fitted exista
+  shared_data$bn_fitted
 })
+
+#Mostrar el modelo ajustado
+# Mostrar el modelo ajustado
+output$fitted_output <- renderPrint({
+  req(shared_data$bn_fitted)  # espera a que el modelo exista
+  shared_data$bn_fitted        # imprime el modelo
+})
+
 }

@@ -1,17 +1,17 @@
 # server/server_bnlearn.R
 # Esta función permite leer los datos y construir una red bayesiana
 # usando uno de los algoritmos
-server_bnlearn <- function(input, output, session) {
+server_bnlearn <- function(input, output, session, shared_data) {
 
   # Reactive para leer los datos
   dataset <- reactive({
     req(input$datafile)
     read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
   })
-  
-  # Guardar dataset en session para compartirlo con server_parameters
+
+  # Guardar dataset en shared_data
   observe({
-    session$userData$dataset <- dataset
+    shared_data$dataset <- dataset()
   })
 
   # Reactive para construir la red al hacer clic en el botón
@@ -27,8 +27,10 @@ server_bnlearn <- function(input, output, session) {
     bn
   })
 
-  # Se llama server_parameters (el dataset ya está en session$userData)
-  server_parameters(input, output, session)
+  # Guardar el modelo en shared_data
+  observeEvent(bn_model(), {
+    shared_data$network <- bn_model()
+  })
 
   # Output de la red, gráfico del bn_model
   output$bn_plot <- renderPlot({
@@ -36,8 +38,7 @@ server_bnlearn <- function(input, output, session) {
     graphviz.plot(bn_model())
   })
 
-  # Guardar el modelo en session$userData para inferencia
-  observeEvent(bn_model(), {
-    session$userData$bn_model <- bn_model()
+  output$network <- renderPrint({
+    bn_model()
   })
 }

@@ -1,9 +1,10 @@
 # server/server_inference.R
-server_inference <- function(input, output, session) {
+server_inference <- function(input, output, session, shared_data) {
 
   inference_result <- eventReactive(input$run_inference, {
     # req detiene la ejecución hasta que haya valor
-    fitted <- session$userData$bn_fitted
+    fitted <- shared_data$bn_fitted
+    
     if (is.null(fitted)) return("Error: el modelo aún no se ha ajustado")
 
     # Ejemplo de evidencia y nodo de consulta
@@ -21,11 +22,11 @@ server_inference <- function(input, output, session) {
 
     # Construir lista de argumentos dinámicamente
     args <- list(fitted = fitted, 
-                 event = event_expr, 
-                 evidence = evidence_expr, 
+                 event = (X == "yes"), #Me sigue dando error si pongo texto aqui
+                 evidence = (E == "yes"), 
                  method = method_inference)
 
-    # Si método exact, agregar n_samples
+    # Si método lw, agregar n_samples
     if (method_inference == "lw") {
       args$n <- input$n_samples
     } 
