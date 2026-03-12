@@ -50,8 +50,8 @@ ui_sidebar <- function() {
       div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
 
-          textInput("event", "Event"),
-          textInput("evidence", "Evidence"),
+          textInput("event", "Event (e.g. X == 'yes' or list(X = 'yes'))"),
+          textInput("evidence", "Evidence (e.g. E == 'yes' or list(E = 'yes'))"),
 
           #El lw funciona con redes grandes y continuas, 
           # el exact con redes pequeñas y discretas
