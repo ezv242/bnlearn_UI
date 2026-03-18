@@ -70,11 +70,4 @@ output$fitted_output <- renderPrint({
   shared_data$bn_fitted
 })
 
-#Mostrar el modelo ajustado
-# Mostrar el modelo ajustado
-output$fitted_output <- renderPrint({
-  req(shared_data$bn_fitted)  # espera a que el modelo exista
-  shared_data$bn_fitted        # imprime el modelo
-})
-
 }
