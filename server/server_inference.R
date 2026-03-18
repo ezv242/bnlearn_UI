@@ -8,6 +8,10 @@ server_inference <- function(input, output, session, shared_data) {
     event_str    <- trimws(input$event)
     evidence_str <- trimws(input$evidence)
 
+    # Reemplazar comas por &
+    event_str <- gsub(",", "&", event_str)
+    evidence_str <- gsub(",", "&", evidence_str)
+
     event_expr    <- tryCatch(parse(text = event_str)[[1]],    error = function(e) NULL)
     evidence_expr <- tryCatch(parse(text = evidence_str)[[1]], error = function(e) NULL)
 
@@ -41,14 +45,14 @@ server_inference <- function(input, output, session, shared_data) {
         #Las columnas a ser extraidas (eventos)
         columnasText <- getEventNodes(event_str)
         # Seleccionar solo columnas que estén en el dataset AND que sean parte del evento
-        columnas <- names(shared_data$dataset)[ names(shared_data$dataset) %in% columnasText ]
+        columnas <- match(columnasText, names(shared_data$dataset))
         #Las filas seleccionadas por el usuario como evidencia
         filas <- input$evidencia_lw + 1
         do.call(bnlearn::cpquery,
           list(
             fitted = fitted,
             event = event_expr,
-            evidence = as.list(shared_data$dataset[filas, columnas]),
+            evidence = as.list(shared_data$dataset[filas, -columnas]),
             method = method_inference,
             n = input$n_samples
           )
@@ -91,7 +95,7 @@ server_inference <- function(input, output, session, shared_data) {
 
 getEventNodes <- function(event_str) {
   # Separar por comas
-  parts <- strsplit(event_str, ",")[[1]]
+  parts <- strsplit(event_str, ",|&")[[1]]
   parts <- trimws(parts)
 
   # Extraer solo el nombre antes de "==", limpio
