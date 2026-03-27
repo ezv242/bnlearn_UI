@@ -10,6 +10,33 @@ server_inference <- function(input, output, session, shared_data) {
       server = TRUE  # recomendable para datasets grandes
     )
   })
+
+  # Configurar input de evidencia para lw cuando se selecciona el método
+  observe({
+    if (!is.null(input$method_inference) && input$method_inference == "lw" && !is.null(shared_data$dataset)) {
+      session$sendCustomMessage(
+        type = "convertirInputDatasetSimple",
+        message = list(
+          inputId = "evidencia_lw",
+          nFilas = nrow(shared_data$dataset)
+        )
+      )
+    }
+  })
+
+  # Configurar input de evidencia para cpdist lw
+  observe({
+    if (!is.null(input$method_inference_cpdist) && input$method_inference_cpdist == "lw" && !is.null(shared_data$dataset)) {
+      session$sendCustomMessage(
+        type = "convertirInputDatasetSimple",
+        message = list(
+          inputId = "evidence_cpdist_lw",
+          nFilas = nrow(shared_data$dataset)
+        )
+      )
+    }
+  })
+
 ##############################################################################
 # Reactive para ejecutar CPQUERY
   inference_result <- eventReactive(input$run_inference, {
@@ -47,13 +74,6 @@ server_inference <- function(input, output, session, shared_data) {
         # Para el caso de lw se debe pasar como evidencia variables del entorno tipo dataset
         # enviar datos al JS y convertir input
         # Suponiendo que tu dataset es shared_data$dataset
-        session$sendCustomMessage(
-          type = "convertirInputDatasetSimple",
-          message = list(
-            inputId = "evidencia_lw",
-            nFilas = nrow(shared_data$dataset)
-          )
-        )
         #Las columnas a ser extraidas (eventos)
         columnasText <- getStringNodes(event_str)
         #Seleccionar solo columnas que estén en el dataset AND que sean parte del evento
@@ -65,7 +85,7 @@ server_inference <- function(input, output, session, shared_data) {
             fitted = fitted,
             event = event_expr,
             evidence = as.list(shared_data$dataset[filas, -columnas]),
-            method = method_inference,
+            method = method_inference
           )
         )
 
@@ -85,51 +105,43 @@ server_inference <- function(input, output, session, shared_data) {
     fitted <- shared_data$bn_fitted
     if (is.null(fitted)) return("Error: el modelo aún no se ha ajustado")
 
+    # Nodos seleccionados para el evento
     nodos_evento <- input$tags
+
+    # Cadena de evidencia
     evidence_str <- trimws(input$evidence_cpdist)
-
     evidence_str <- gsub(",", "&", evidence_str)
+    evidence_str <- tryCatch(parse(text = evidence_str)[[1]], error = function(e) NULL)
 
-    evidence_expr <- tryCatch(parse(text = evidence_str)[[1]], error = function(e) NULL)
-
-    method_inference <- input$method_inference_cpdist
+    method_inference_cpdist <- input$method_inference_cpdist
 
     args <- list(
       fitted   = fitted,
       event    = nodos_evento,
-      evidence = evidence_expr,
-      method   = method_inference
+      evidence = evidence_str,
+      method   = method_inference_cpdist
     )
 
     result <- tryCatch({ 
       
-      if(method_inference == "lw") {
+      if(method_inference_cpdist == "lw") {
         # do.call(bnlearn::cpquery, args)
         # Para el caso de lw se debe pasar como evidencia variables del entorno tipo dataset
         # enviar datos al JS y convertir input
-        session$sendCustomMessage(
-          type = "convertirInputDatasetSimple",
-          message = list(
-            inputId = "evidence_cpdist_lw",
-            nFilas = nrow(shared_data$dataset)
-          )
-        )
-
         #Seleccionar solo columnas que estén en el dataset AND que sean parte del evento
         columnas <- match(nodos_evento, names(shared_data$dataset))
         #Las filas seleccionadas por el usuario como evidencia
-        filas <- input$evidencia_lw + 1
-        do.call(bnlearn::cpquery,
+        filas <- input$evidence_cpdist_lw + 1
+        do.call(bnlearn::cpdist,
           list(
             fitted = fitted,
-            event = event_expr,
+            event = nodos_evento,
             evidence = as.list(shared_data$dataset[filas, -columnas]),
-            method = method_inference,
+            method = method_inference_cpdist
           )
         )
-
       }else{
-        do.call(bnlearn::cpquery, args)
+        do.call(bnlearn::cpdist, args)
       }
 
     }, error = function(e) {

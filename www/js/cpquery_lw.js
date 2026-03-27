@@ -1,33 +1,100 @@
 function convertirInputDatasetSimple(inputId, nFilas) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
+
+  let input = document.getElementById(inputId);
+
+  // Soporte para wrappers (shiny.semantic)
+  if (!input) {
+    const wrapper = document.querySelector(`[id='${inputId}']`);
+    if (wrapper) {
+      input = wrapper.querySelector("input");
+    }
+  }
+
+  if (!input) {
+    console.log("No se encontró el input:", inputId);
+    return;
+  }
 
   input.type = "text";
   input.placeholder = "Haz click para seleccionar filas...";
 
-  // Contenedor de etiquetas (reutilizable)
+  // ============================
+  // 🔥 WRAPPER (input con tags)
+  // ============================
+
+  let wrapper = input._wrapper;
+
+  if (!wrapper) {
+    wrapper = document.createElement("div");
+
+    wrapper.style.display = "flex";
+    wrapper.style.flexWrap = "wrap";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "5px";
+    wrapper.style.padding = "4px";
+    wrapper.style.border = "1px solid #ccc";
+    wrapper.style.borderRadius = "4px";
+    wrapper.style.minHeight = "38px";
+    wrapper.style.cursor = "text";
+    wrapper.style.background = "white";
+
+    input.parentNode.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+
+    input._wrapper = wrapper;
+  }
+
+  // Estilo del input interno
+  input.style.border = "none";
+  input.style.outline = "none";
+  input.style.flex = "1";
+  input.style.minWidth = "120px";
+
+  // ============================
+  // 📌 CONTENEDOR DE TAGS
+  // ============================
+
   let tagContainer = input._tagContainer;
+
   if (!tagContainer) {
     tagContainer = document.createElement("div");
+
     tagContainer.style.display = "flex";
     tagContainer.style.flexWrap = "wrap";
     tagContainer.style.gap = "5px";
-    tagContainer.style.marginTop = "5px";
-    input.parentNode.insertBefore(tagContainer, input.nextSibling);
+
+    wrapper.insertBefore(tagContainer, input);
+
     input._tagContainer = tagContainer;
+  } else {
+    tagContainer.innerHTML = '';
   }
 
-  // Evitar múltiples listeners
-  if (input._clickHandler) input.removeEventListener("click", input._clickHandler);
+  // Click en todo el wrapper abre el popup
+  wrapper.addEventListener("click", () => input.click());
+
+  // ============================
+  // ❌ EVITAR DUPLICAR EVENTOS
+  // ============================
+
+  if (input._clickHandler) {
+    input.removeEventListener("click", input._clickHandler);
+  }
+
+  // ============================
+  // 📦 POPUP
+  // ============================
 
   input._clickHandler = function () {
-    // Eliminar popup previo
-    let existing = document.getElementById("popupFilas");
+
+    const popupId = "popupFilas_" + inputId;
+
+    let existing = document.getElementById(popupId);
     if (existing) existing.remove();
 
-    // Crear popup
     let popup = document.createElement("div");
-    popup.id = "popupFilas";
+    popup.id = popupId;
+
     popup.style.position = "fixed";
     popup.style.background = "rgba(255,255,255,0.97)";
     popup.style.border = "2px solid rgba(0,0,0,0.6)";
@@ -36,70 +103,83 @@ function convertirInputDatasetSimple(inputId, nFilas) {
     popup.style.maxHeight = "300px";
     popup.style.overflow = "auto";
     popup.style.boxShadow = "0 4px 14px rgba(0,0,0,0.25)";
+
     popup.addEventListener("click", (e) => e.stopPropagation());
 
-    // Botón “Seleccionar todas las filas”
+    // Botón seleccionar todas
     let allBtn = document.createElement("button");
     allBtn.textContent = "Seleccionar todas las filas";
     allBtn.style.display = "block";
     allBtn.style.marginBottom = "6px";
+
     allBtn.onclick = (e) => {
       e.stopPropagation();
+
       for (let i = 0; i < nFilas; i++) {
-        // Solo crear si no está seleccionada
-        if (!Array.from(tagContainer.children).some(t => t.textContent === `Fila ${i + 1}`)) {
+        if (!Array.from(tagContainer.children).some(t => parseInt(t.dataset.index) === i)) {
           addTag(i);
         }
       }
+
       popup.remove();
     };
+
     popup.appendChild(allBtn);
 
-    // Botones por fila
+    // Botones individuales
     for (let i = 0; i < nFilas; i++) {
-      // Comprobar si ya existe etiqueta para esta fila
-      if (Array.from(tagContainer.children).some(t => t.textContent === `Fila ${i + 1}`)) continue;
+
+      if (Array.from(tagContainer.children).some(t => parseInt(t.dataset.index) === i)) continue;
 
       let btn = document.createElement("button");
       btn.textContent = `Fila ${i + 1}`;
       btn.style.margin = "2px";
+
       btn.onclick = (e) => {
         e.stopPropagation();
         addTag(i);
         popup.remove();
       };
+
       popup.appendChild(btn);
     }
 
     document.body.appendChild(popup);
-    const rect = input.getBoundingClientRect();
+
+    const rect = wrapper.getBoundingClientRect();
     popup.style.left = rect.left + "px";
     popup.style.top = rect.bottom + "px";
 
-    // Cerrar popup al click fuera
+    // Cerrar al hacer click fuera
     setTimeout(() => {
-      document.addEventListener("click", function handler(e) {
+      function handler(e) {
         if (!popup.contains(e.target)) {
           popup.remove();
           document.removeEventListener("click", handler);
         }
-      });
+      }
+      document.addEventListener("click", handler);
     }, 0);
   };
 
   input.addEventListener("click", input._clickHandler);
 
-  // Función para agregar etiquetas
+  // ============================
+  // ➕ AÑADIR TAG
+  // ============================
+
   function addTag(filaIndex) {
     const tag = document.createElement("span");
+
     tag.textContent = `Fila ${filaIndex + 1}`;
     tag.dataset.index = filaIndex;
 
-    tag.style.background = "#007bff";
+    tag.style.background = "#2185d0";
     tag.style.color = "white";
-    tag.style.padding = "2px 6px";
-    tag.style.borderRadius = "4px";
+    tag.style.padding = "3px 8px";
+    tag.style.borderRadius = "12px";
     tag.style.cursor = "pointer";
+    tag.style.fontSize = "12px";
 
     tag.onclick = () => {
       tagContainer.removeChild(tag);
@@ -110,16 +190,23 @@ function convertirInputDatasetSimple(inputId, nFilas) {
     updateInput();
   }
 
-  // Sincronizar con Shiny
+  // ============================
+  // 🔄 SINCRONIZAR CON SHINY
+  // ============================
+
   function updateInput() {
     const seleccionadas = Array.from(tagContainer.children).map(t =>
-      parseInt(t.textContent.replace("Fila ", "")) - 1
+      parseInt(t.dataset.index)
     );
+
     Shiny.setInputValue(inputId, seleccionadas, { priority: "event" });
   }
 }
 
-// Handler Shiny
+// ============================
+// 🔗 HANDLER SHINY
+// ============================
+
 Shiny.addCustomMessageHandler("convertirInputDatasetSimple", function (msg) {
   convertirInputDatasetSimple(msg.inputId, msg.nFilas);
 });
