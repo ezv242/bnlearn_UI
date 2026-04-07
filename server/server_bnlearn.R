@@ -33,12 +33,12 @@ server_bnlearn <- function(input, output, session, shared_data) {
   })
 
   # Output de la red, gráfico del bn_model
-  output$bn_plot <- renderPlot({
-    req(bn_model())
-    graphviz.plot(bn_model())
-  })
+  #output$bn_plot <- renderPlot({
+  #  req(bn_model())
+  #  graphviz.plot(bn_model())
+  #})
 
-  output$network <- renderPrint({
-    bn_model()
-  })
+  #output$network <- renderPrint({
+  #  bn_model()
+  #})
 }

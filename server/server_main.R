@@ -24,4 +24,7 @@ server_main <- function(input, output, session) {
   
   # Llamar a la parte de inferencia
   server_inference(input, output, session, shared_data)
+
+  # Llamar a la parte de visualización de gráficos
+  server_graphs(input, output, session, shared_data)
 }

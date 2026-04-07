@@ -5,6 +5,7 @@ library(shiny)
 library(shiny.semantic)
 library(bnlearn)
 library(Rgraphviz)
+library(visNetwork)
 
 # Cargar scripts de UI
 source("ui/ui_main.R")
@@ -16,6 +17,8 @@ source("server/server_main.R")
 source("server/server_bnlearn.R")
 source("server/server_inference.R")
 source("server/server_parameters.R")
+source("server/server_graphs.R")
+
 
 # -----------------------------
 # 2. EJECUTAR LA APP
