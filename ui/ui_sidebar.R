@@ -17,7 +17,7 @@ ui_sidebar <- function() {
     ),
     # AJUSTE PARÁMETROS: Parámetros de ajuste y de inferencia,
     # con visibilidad condicional según el tipo de datos
-    div(class = "ui segment", 
+    div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
       "Método de ajuste de parámetros:",
       dropdown_input("method",
@@ -41,6 +41,10 @@ ui_sidebar <- function() {
       ),
       checkboxInput("keep_fitted", "Keep_fitted", value = TRUE),
       checkboxInput("debug", "debug", value = FALSE),
+      div(
+        style = "display: flex; gap: 10px;",
+        action_button("fit_model", "Ajustar Modelo"),
+      )
     ),
 
     # INFERENCIA: Inferencia, con inputs para evento, evidencia

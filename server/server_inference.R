@@ -40,6 +40,7 @@ server_inference <- function(input, output, session, shared_data) {
 ##############################################################################
 # Reactive para ejecutar CPQUERY
   inference_result <- eventReactive(input$run_inference, {
+
     fitted <- shared_data$bn_fitted
     if (is.null(fitted)) return("Error: el modelo aún no se ha ajustado")
 
@@ -77,6 +78,7 @@ server_inference <- function(input, output, session, shared_data) {
         #Las columnas a ser extraidas (eventos)
         columnasText <- getStringNodes(event_str)
         #Seleccionar solo columnas que estén en el dataset AND que sean parte del evento
+
         columnas <- match(columnasText, names(shared_data$dataset))
         #Las filas seleccionadas por el usuario como evidencia
         filas <- input$evidencia_lw + 1

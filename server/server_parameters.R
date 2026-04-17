@@ -7,10 +7,11 @@ data_type_r <- reactiveVal(NULL)
 
 # Se ejecuta cada vez que se ajusta el modelo, 
 # para actualizar el tipo de datos y los parámetros dinámicos
-observe({
+observeEvent(input$fit_model, {
 
   bn <- shared_data$network
   data <- shared_data$dataset
+  data_type_r(shared_data$data_type)
   req(data, bn)  # Esperar a que tanto dataset como network estén disponibles
 
   # Validar que el dataset y el modelo estén disponibles
@@ -29,19 +30,6 @@ observe({
   # Si método bayes
   if (method == "bayes") {
     args$iss <- input$iss
-  }
-
-  # Se comprueba el tipo de datos y se almacena en data_type_r y
-  # shared_data$data_type
-  if(all(sapply(data, is.factor))){
-    shared_data$data_type <- "discrete"
-    data_type_r("discrete")
-  } else if(all(sapply(data, is.numeric))){
-    shared_data$data_type <- "continuous"
-    data_type_r("continuous")
-  } else {
-    shared_data$data_type <- "mixed"
-    data_type_r("mixed")
   }
 
   # Si el tipo de datos es mixto, se añade el parámetro replace.unidentifiable

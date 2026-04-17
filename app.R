@@ -23,4 +23,4 @@ source("server/server_graphs.R")
 # -----------------------------
 # 2. EJECUTAR LA APP
 # -----------------------------
-shinyApp(ui = ui_main() , server = server_main)
+shinyApp(ui = ui_main(), server = server_main)
