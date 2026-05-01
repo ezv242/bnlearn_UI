@@ -7,9 +7,7 @@ ui_sidebar <- function() {
       style = "display: flex; flex-direction: column; gap: 10px;",
       fileInput("datafile", "Selecciona archivo CSV", accept = ".csv"),
       "Algoritmo de aprendizaje:",
-      dropdown_input("algorithm",
-                     choices = c("hc", "tabu", "gs", "iamb", "mmhc"),
-                     value = "hc"),
+      uiOutput("algorithm_selector"),
       div(
         style = "display: flex; gap: 10px;",
         action_button("run_bnlearn", "Aprender Red"),
@@ -20,22 +18,22 @@ ui_sidebar <- function() {
     div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
       "Método de ajuste de parámetros:",
-      dropdown_input("method",
-                     choices = c("mle", "bayes", "bayes-g"),
-                     value = "mle"),
+      uiOutput("method_parameters_selector"),
       conditionalPanel(
-        condition = "input.method == 'bayes'",
+        condition = "input.method_parametershm == 'bayes'",
         numericInput("iss", "Equivalent Sample Size (ISS)", value = 1, min = 0)
       ),
       conditionalPanel(
-        condition = "input.method == 'bayes-g'",
+        condition = "input.method_parametershm == 'bayes-g'",
         "ISS:",
         dropdown_input("iss_bayes_g",
                        choices = c("iss.mu", "iss.w"),
                        value = "iss.mu")
       ),
       conditionalPanel(
-        condition = "output.data_type_hidden == 'mixed'",
+        condition = "input.method_parametershm == 'mle' || 
+                     input.method_parametershm == 'mle-g' || 
+                     input.method_parametershm == 'mle-cg'",
         checkboxInput("replace_unidentifiable", 
                       "replace_unidentifiable", value = TRUE)
       ),

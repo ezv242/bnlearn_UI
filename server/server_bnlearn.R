@@ -1,4 +1,3 @@
-# server/server_bnlearn.R
 # Esta función permite leer los datos y construir una red bayesiana
 # usando uno de los algoritmos
 server_bnlearn <- function(input, output, session, shared_data) {
@@ -22,23 +21,32 @@ server_bnlearn <- function(input, output, session, shared_data) {
     data <- dataset()
     # Se asigna el tipo del dataset
     tipo_datos <- input$tipo_datos
-    shared_data$data_type <- tipo_datos
+    data_continous <- input$datos_continuo
+    graph_dirigido <- input$graph_dirigido
+    dataset_NAs <- input$datos_NAs
+    if (tipo_datos == "cualitativos") {
+      shared_data$data_discrete <- TRUE
+    }else{
+      shared_data$data_discrete <- input$datos_discretos
+    }
 
-    # Convertir a facotor si se selecciona esa opción
+    shared_data$data_type <- tipo_datos
+    shared_data$data_continuous <- data_continous
+    shared_data$graph_dirigido <- graph_dirigido
+    shared_data$dataset_NAs <- dataset_NAs
+
+    # Convertir a factor si se selecciona esa opción
     if (input$to_factor) {
       data[] <- lapply(data, as.factor)
     }
 
-    # Predecir valores NA si se selecciona esa opción
-    #NA_predict <- input$NA_predict
-    #if (NA_predict == TRUE) {
-    #  fitted <- bnlearn::bn.fit(model2network(NA_predict), dataset_completo())
-    #  bnlearn::impute(fitted, with_missing_data)
-    #}
-
     # Discretización si se seleccciona esa opción
     discretizacion <- input$discretizacion
     if (discretizacion) {
+      #TEMPORAL: Para cambiar el tipo del dataset a discreto
+      shared_data$data_discrete <- TRUE
+      ###########################################################
+
       discretization_method <- input$discretization_method
       breaks <- input$breaks
       ordered <- input$ordered
@@ -73,16 +81,133 @@ server_bnlearn <- function(input, output, session, shared_data) {
     toast("¡Datos procesados con éxito!", class = "success")
   })
 
+  # Crear una lista desplegable dinamica de algoritmos disponibles
+  available_algorithms <- reactive({
+    all_algorithms <- c(
+      "hc", "tabu", "mmhc", "rsmax2", "h2pc",
+      "direct.lingam",
+      "pc.stable", "gs", "iamb", "fast.iamb",
+      "inter.iamb", "iamb.fdr", "mmpc", "si.hiton.pc", "hpc"
+    )
+
+    # Si no hay preprocesado, mostrar todas las opciones
+    if (is.null(shared_data$data_type) &&
+        is.null(shared_data$data_continuous) &&
+        is.null(shared_data$graph_dirigido) &&
+        is.null(shared_data$dataset_NAs)) {
+      return(all_algorithms)
+    }
+
+    graph_dirigido <- isTRUE(shared_data$graph_dirigido)
+    data_continuous <- isTRUE(shared_data$data_continuous)
+    dataset_NAs <- isTRUE(shared_data$dataset_NAs)
+    data_type <- shared_data$data_type
+
+    # direct.lingam solo si los datos son continuos, sin NAs y el tipo es continuos
+    valid_direct_lingam <- data_continuous && !dataset_NAs && identical(data_type, "numericos")
+
+    if (!graph_dirigido && !valid_direct_lingam) {
+      c("hc", "tabu", "mmhc", "rsmax2", "h2pc")
+    } else if (!graph_dirigido && valid_direct_lingam) {
+      c("hc", "tabu", "mmhc", "rsmax2", "h2pc", "direct.lingam")
+    } else if (graph_dirigido && !valid_direct_lingam) {
+      c("hc", "tabu", "mmhc", "rsmax2", "h2pc",
+        "pc.stable", "gs", "iamb", "fast.iamb",
+        "inter.iamb", "iamb.fdr", "mmpc", "si.hiton.pc", "hpc")
+    } else {
+      c("hc", "tabu", "mmhc", "rsmax2", "h2pc", "direct.lingam",
+        "pc.stable", "gs", "iamb", "fast.iamb",
+        "inter.iamb", "iamb.fdr", "mmpc", "si.hiton.pc", "hpc")
+    }
+  })
+
+  # Mostrar por pantalla la lista desplegable dinamica de algoritmos disponibles
+  output$algorithm_selector <- renderUI({
+    choices <- available_algorithms()
+    selected <- if (!is.null(input$algorithm) && input$algorithm %in% choices) {
+      input$algorithm
+    } else {
+      choices[1]
+    }
+    dropdown_input("algorithm", choices = choices, value = selected)
+  })
+
   # Reactive para construir la red al hacer clic en el botón
   bn_model <- eventReactive(input$run_bnlearn, {
     data <- dataset()
     alg <- input$algorithm
-    bn <- switch(alg,
-                 "hc" = hc(data),
-                 "tabu" = tabu(data),
-                 "gs" = gs(data),
-                 "mmhc" = mmhc(data),
-                 "iamb" = iamb(data))
+
+    # No se cumplen las condicones de ser numerico, continuo y sin NAs
+    condicion_datos <- !shared_data$data_continuous ||
+      shared_data$dataset_NAs || shared_data$data_type != "numericos"
+
+    if (!shared_data$graph_dirigido && condicion_datos) {
+      bn <- switch(alg,
+        #Algoritmos de aprendizaje de estructura basados en puntuación
+        "hc" = bnlearn::hc(data),
+        "tabu" = bnlearn::tabu(data),
+        #Algoritmo de aprendizaje de estructua hibrido
+        "mmhc" = bnlearn::mmhc(data),
+        "rsmax2" = bnlearn::rsmax2(data),
+        "h2pc" = bnlearn::h2pc(data)
+      )
+    }else if (!shared_data$graph_dirigido && !condicion_datos) {
+      bn <- switch(alg,
+        #Algoritmos de aprendizaje de estructura basados en puntuación
+        "hc" = bnlearn::hc(data),
+        "tabu" = bnlearn::tabu(data),
+        #Algoritmo de aprendizaje de estructua hibrido
+        "mmhc" = bnlearn::mmhc(data),
+        "rsmax2" = bnlearn::rsmax2(data),
+        "h2pc" = bnlearn::h2pc(data),
+        #Algoritmo de aprendizaje de estructura basado en causalidad (Solo funciona con datos numericos continuos y sin NAs)
+        "direct.lingam" = bnlearn::direct.lingam(data)
+      )
+    }else if (shared_data$graph_dirigido && condicion_datos) {
+      bn <- switch(alg,
+        #Algoritmos de aprendizaje de estructura basados en puntuación
+        "hc" = bnlearn::hc(data),
+        "tabu" = bnlearn::tabu(data),
+        #Algoritmo de aprendizaje de estructua hibrido
+        "mmhc" = bnlearn::mmhc(data),
+        "rsmax2" = bnlearn::rsmax2(data),
+        "h2pc" = bnlearn::h2pc(data),
+        #Metodos de aprendizaje de estructura basados en test de independencia (solo para grafos dirigidos acíclicos)
+        "pc.stable" = bnlearn::pc.stable(data),
+        "gs" = bnlearn::gs(data),
+        "iamb" = bnlearn::iamb(data),
+        "fast.iamb" = bnlearn::fast.iamb(data),
+        "inter.iamb" = bnlearn::inter.iamb(data),
+        "iamb.fdr" = bnlearn::iamb.fdr(data),
+        "mmpc" = bnlearn::mmpc(data),
+        "si.hiton.pc" = bnlearn::si.hiton.pc(data),
+        "hpc" = bnlearn::hpc(data)
+      )
+    }else{
+      #Se ejecuta el algorimto de aprendizaje de la estructura de la red
+      bn <- switch(alg,
+        #Algoritmos de aprendizaje de estructura basados en puntuación
+        "hc" = bnlearn::hc(data),
+        "tabu" = bnlearn::tabu(data),
+        #Algoritmo de aprendizaje de estructua hibrido
+        "mmhc" = bnlearn::mmhc(data),
+        "rsmax2" = bnlearn::rsmax2(data),
+        "h2pc" = bnlearn::h2pc(data),
+          #Algoritmo de aprendizaje de estructura basado en causalidad (Solo funciona con datos numericos continuos y sin NAs)
+        "direct.lingam" = bnlearn::direct.lingam(data),
+        #Metodos de aprendizaje de estructura basados en test de independencia (solo para grafos dirigidos acíclicos)
+        "pc.stable" = bnlearn::pc.stable(data),
+        "gs" = bnlearn::gs(data),
+        "iamb" = bnlearn::iamb(data),
+        "fast.iamb" = bnlearn::fast.iamb(data),
+        "inter.iamb" = bnlearn::inter.iamb(data),
+        "iamb.fdr" = bnlearn::iamb.fdr(data),
+        "mmpc" = bnlearn::mmpc(data),
+        "si.hiton.pc" = bnlearn::si.hiton.pc(data),
+        "hpc" = bnlearn::hpc(data)
+      )
+    }
+
     bn
   })
 

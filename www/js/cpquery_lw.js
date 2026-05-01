@@ -18,10 +18,7 @@ function convertirInputDatasetSimple(inputId, nFilas) {
   input.type = "text";
   input.placeholder = "Haz click para seleccionar filas...";
 
-  // ============================
-  // 🔥 WRAPPER (input con tags)
-  // ============================
-
+  // WRAPPER (input con tags)
   let wrapper = input._wrapper;
 
   if (!wrapper) {
@@ -50,10 +47,7 @@ function convertirInputDatasetSimple(inputId, nFilas) {
   input.style.flex = "1";
   input.style.minWidth = "120px";
 
-  // ============================
-  // 📌 CONTENEDOR DE TAGS
-  // ============================
-
+  // CONTENEDOR DE TAGS
   let tagContainer = input._tagContainer;
 
   if (!tagContainer) {
@@ -73,18 +67,12 @@ function convertirInputDatasetSimple(inputId, nFilas) {
   // Click en todo el wrapper abre el popup
   wrapper.addEventListener("click", () => input.click());
 
-  // ============================
-  // ❌ EVITAR DUPLICAR EVENTOS
-  // ============================
-
+  // EVITAR DUPLICAR EVENTOS
   if (input._clickHandler) {
     input.removeEventListener("click", input._clickHandler);
   }
 
-  // ============================
-  // 📦 POPUP
-  // ============================
-
+  // POPUP
   input._clickHandler = function () {
 
     const popupId = "popupFilas_" + inputId;

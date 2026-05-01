@@ -5,6 +5,41 @@ server_parameters <- function(input, output, session, shared_data) {
 # (discreta, continua, mixta) (invisible)
 data_type_r <- reactiveVal(NULL)
 
+available_method_parameters <- reactive({
+  all_methods <- c("bayes", "mle", "hdir", "hard-em", 
+                   "mle-g", "hard-em-g", "mle-cg", "hard-em-cg")
+
+  # Si no hay preprocesado, mostrar todas las opciones
+  if (is.null(shared_data$data_type)) {
+    return(all_methods)
+  }
+
+  data_type <- shared_data$data_type
+  data_continuous <- isTRUE(shared_data$data_continuous)
+  data_discrete <- isTRUE(shared_data$data_discrete)
+
+  if (data_type == "cualitativos" || data_discrete) {
+    c("bayes", "mle", "hdir", "hard-em")
+  } else if (data_continuous) {
+    c("mle-g", "hard-em-g")
+  } else if (!data_continuous && !data_discrete) {
+    c("mle-cg", "hard-em-cg")
+  } else {
+    all_methods
+  }
+})
+
+# Mostrar por pantalla la lista desplegable dinamica de metodos de ajuste disponibles
+output$method_parameters_selector <- renderUI({
+  choices <- available_method_parameters()
+  selected <- if (!is.null(input$method_parametershm) && input$method_parametershm %in% choices) {
+    input$method_parametershm
+  } else {
+    choices[1]
+  }
+  dropdown_input("method_parametershm", choices = choices, value = selected)
+})
+
 # Se ejecuta cada vez que se ajusta el modelo, 
 # para actualizar el tipo de datos y los parámetros dinámicos
 observeEvent(input$fit_model, {
@@ -22,7 +57,7 @@ observeEvent(input$fit_model, {
   })
 
   #Se selecciona el método de ajuste
-  method <- input$method
+  method <- input$method_parametershm
 
   # Construir lista de argumentos dinámicamente
   args <- list(x = bn, data = data, method = method)
@@ -32,8 +67,9 @@ observeEvent(input$fit_model, {
     args$iss <- input$iss
   }
 
-  # Si el tipo de datos es mixto, se añade el parámetro replace.unidentifiable
-  if (data_type_r() == "mixed") {
+  # Si el tipo de datos no es ni discreto ni continuo, 
+  # se añade el parámetro replace.unidentifiable
+  if (method == "mle" || method == "mle-g" || method == "mle-cg") {
     args$replace.unidentifiable <- input$replace_unidentifiable
   }
 
@@ -46,6 +82,9 @@ observeEvent(input$fit_model, {
 
   # Guardar el modelo ajustado
   shared_data$bn_fitted <- fitted
+
+  # Notificación de que el modelo se ha ajustado correctamente
+  toast("¡Se ha guardado la configuración del modelo!", class = "success")
 })
 
 # Output oculto para usar en conditionalPanel

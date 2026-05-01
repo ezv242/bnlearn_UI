@@ -3,7 +3,9 @@ server_graphs <- function(input, output, session, shared_data) {
   # Reactive para almacenar nodos y aristas del grafo
   nodes <- reactiveVal(NULL)
   edges <- reactiveVal(NULL)
+  nodo_nuevo <- reactiveVal(NULL)
 
+  # Actualizar nodos y aristas cada vez que se carga o actualiza la red bayesiana
   graph_results <- observeEvent(shared_data$network, {
     req(shared_data$network)
     bn <- shared_data$network
@@ -15,7 +17,9 @@ server_graphs <- function(input, output, session, shared_data) {
 
     arcs_df <- as.data.frame(bnlearn::arcs(bn))
     if (nrow(arcs_df) == 0) {
-      arcs_df <- data.frame(from = character(0), to = character(0), stringsAsFactors = FALSE)
+      arcs_df <- data.frame(
+        from = character(0), to = character(0), stringsAsFactors = FALSE
+      )
     }
     edges(arcs_df)
   }, ignoreNULL = TRUE)
@@ -26,11 +30,12 @@ server_graphs <- function(input, output, session, shared_data) {
     visNetwork(nodes(), edges(), height = "50%", width = "100%") %>%
     visNodes(shape = "dot", size = 20) %>%
     visEdges(arrows = "to") %>%
+    visLayout(randomSeed = 123) %>%
     visOptions(manipulation = list(
       enabled = TRUE,
       addNode = htmlwidgets::JS("function(data, callback) { 
         Shiny.setInputValue('graph_change', {type: 'addNode', data: data}, {priority: 'event'});
-        callback(data); 
+        callback(null); 
       }"),
       addEdge = htmlwidgets::JS("function(data, callback) { 
         Shiny.setInputValue('graph_change', {type: 'addEdge', data: data}, {priority: 'event'});
@@ -43,44 +48,126 @@ server_graphs <- function(input, output, session, shared_data) {
       deleteEdge = htmlwidgets::JS("function(data, callback) { 
         Shiny.setInputValue('graph_change', {type: 'deleteEdge', data: data}, {priority: 'event'});
         callback(data); 
-      }")
+      }"),
+      editNode = FALSE,
+      editEdge = FALSE
     ))
   })
 
   # Sincronizar cambios visuales con el modelo bnlearn
   observeEvent(input$graph_change, {
-    res <- input$graph_change
-    nuevo_nodo <- res$data
+
     req(shared_data$network)
     req(shared_data$dataset)
+    res <- input$graph_change
+    nodo_nuevo(res$data$label)
     bn <- shared_data$network
     data <- shared_data$dataset
 
     cat("\n--- FEEDBACK DEL GRAFO ---\n")
     print(paste("Evento detectado:", res$type))
 
+    # Se añade un nuevo nodo al modelo bnlearn y al dataset
     if (res$type == "addNode") {
-      bn_new <- bnlearn::add.node(bn, nuevo_nodo$label) # Agrega el nodo al modelo bnlearn
-      data[[nuevo_nodo$label]] <- NA_real_  # Agrega una columna vacía al dataset para el nuevo nodo
-      #print(res$data) # Verás ID, etiqueta, etc.
+      show_modal("modal_añadir_nodo")
     }
 
     if (res$type == "addEdge") {
-      bn_new <- bn
-      # En visNetwork, las aristas nuevas traen 'from' y 'to'
-      print(paste("Origen:", res$data$from, "-> Destino:", res$data$to))
+      tryCatch({
+        bn_new <- bnlearn::set.arc(
+          bn,
+          from = res$data$from,
+          to = res$data$to,
+          check.cycles = TRUE
+        )
+        shared_data$network <- bn_new
+      }, error = function(e) {
+        showNotification(paste(
+          "Error al añadir arista:",
+          e$message
+        ), type = "error")
+      })
     }
 
     if (res$type == "deleteNode") {
-      bn_new <- bnlearn::remove.node(bn, nuevo_nodo$label) # Elimina el nodo del modelo bnlearn
-      data[[nuevo_nodo$label]] <- NULL  # Elimina la columna del dataset
-      #print(res$data$nodes)
+
+      # Contamos cuántos IDs vienen en el vector de nodos
+      num_borrados <- length(res$data$nodes)
+
+      # Si solo es uno, lo borramos directamente
+      if (num_borrados == 1) {
+        id_a_borrar <- res$data$nodes[[1]]
+        bn_new <- bnlearn::remove.node(bn, id_a_borrar)
+        data[[id_a_borrar]] <- NULL
+
+      } else if (num_borrados > 1) {
+        # Si el usuario seleccionó varios y los borró de golpe
+        for (id in res$data$nodes) {
+          bn <- bnlearn::remove.node(bn, id)
+          data[[id]] <- NULL
+        }
+      }
+      shared_data$dataset <- data
+      shared_data$network <- bn_new
     }
+
+    if (res$type == "deleteEdge") {
+      bn_new <- bnlearn::drop.arc(bn, from = res$data$from, to = res$data$to)
+      shared_data$network <- bn_new
+    }
+
     cat("--------------------------\n")
 
-    shared_data$network <- bn_new
-    shared_data$dataset <- data
   })
+
+  # Configuración del nuevo nodo añadido
+  observeEvent(input$btn_añadir_nodo, {
+
+    tipo_nodo <- input$new_node_type
+    niveles <- input$new_node_levels
+    new_data <- shared_data$dataset
+    bn <- shared_data$network
+    nombre_nodo <- input$new_node_name
+
+    tryCatch({
+      bn_new <- bnlearn::add.node(bn, nombre_nodo)
+      shared_data$network <- bn_new
+
+      if (tipo_nodo == "cualitativo") {
+        # CORRECTO: Creamos la columna con NA y le asignamos niveles
+        new_data[[nombre_nodo]] <- factor(
+          rep(NA, nrow(new_data)), 
+          levels = unlist(strsplit(niveles, ","))
+        )
+        # Actualizar información del dataset en shared_data
+        if (shared_data$data_type == "numericos") {
+          shared_data$data_type <- "mixtos"
+        }
+      } else {
+        # CORRECTO: Creamos la columna como numérica
+        new_data[[nombre_nodo]] <- as.numeric(rep(NA, nrow(new_data)))
+        # Actualizar información del dataset en shared_data
+        if (shared_data$data_type == "cualitativos") {
+          shared_data$data_type <- "mixtos"
+        }
+      }
+      # Actualizar el dataset en shared_data
+      shared_data$dataset_NAs <- TRUE
+      shared_data$dataset <- new_data
+      # Cerrar el modal automáticamente al terminar
+      shiny.semantic::hide_modal(
+        id = "modal_añadir_nodo",
+        session = shiny::getDefaultReactiveDomain(),
+        asis = TRUE
+      )
+    }, error = function(e) {
+      showNotification(paste(
+        "Error al añadir nodo:",
+        e$message
+      ), type = "error")
+    })
+  })
+
 
   output$bn_plot <- renderPlot({
     req(shared_data$network)
