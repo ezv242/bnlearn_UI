@@ -1,12 +1,10 @@
 # server/server_parameters.R
 server_parameters <- function(input, output, session, shared_data) {
 
-# ReactiveVal para exponer el tipo a la UI 
-# (discreta, continua, mixta) (invisible)
 data_type_r <- reactiveVal(NULL)
 
 available_method_parameters <- reactive({
-  all_methods <- c("bayes", "mle", "hdir", "hard-em", 
+  all_methods <- c("bayes", "mle", "hdir", "hard-em",
                    "mle-g", "hard-em-g", "mle-cg", "hard-em-cg")
 
   # Si no hay preprocesado, mostrar todas las opciones
@@ -58,6 +56,7 @@ observeEvent(input$fit_model, {
 
   #Se selecciona el método de ajuste
   method <- input$method_parametershm
+  shared_data$method_parameters <- method
 
   # Construir lista de argumentos dinámicamente
   args <- list(x = bn, data = data, method = method)
@@ -86,10 +85,6 @@ observeEvent(input$fit_model, {
   # Notificación de que el modelo se ha ajustado correctamente
   toast("¡Se ha guardado la configuración del modelo!", class = "success")
 })
-
-# Output oculto para usar en conditionalPanel
-output$data_type_hidden <- renderText({ data_type_r()})
-outputOptions(output, "data_type_hidden", suspendWhenHidden = FALSE)
 
 # Mostrar el modelo ajustado
 output$fitted_output <- renderPrint({

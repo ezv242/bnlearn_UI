@@ -11,8 +11,10 @@ server_main <- function(input, output, session) {
   #Objeto reactivo compartido
   shared_data <- reactiveValues(
     dataset = NULL,      # Los datos cargados
+    test_dataset = NULL,      # El conjunto de datos para test
     network = NULL,      # La estructura de la red (bn_model)
     bn_fitted = NULL,    # El modelo ajustado
+    method_parameters = NULL, # El método de inferencia seleccionado
     data_type = NULL,     # El tipo de datos (discreto, continuo, mixto)
     data_continuous = NULL, # Datos continuos (si se cargan)
     data_discrete = NULL,   # Datos discretos (si se cargan)

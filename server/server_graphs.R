@@ -48,9 +48,9 @@ server_graphs <- function(input, output, session, shared_data) {
       deleteEdge = htmlwidgets::JS("function(data, callback) { 
         Shiny.setInputValue('graph_change', {type: 'deleteEdge', data: data}, {priority: 'event'});
         callback(data); 
-      }"),
-      editNode = FALSE,
-      editEdge = FALSE
+      }")
+      #editNode = FALSE,
+      #editEdge = FALSE
     ))
   })
 
