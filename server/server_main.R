@@ -22,6 +22,12 @@ server_main <- function(input, output, session) {
     dataset_NAs = NULL # Si se indica que los datos contienen NAs
   )
 
+  # BOTÓN DE REINICIO
+  observeEvent(input$reset_app, {
+    session$reload()
+  })
+
+  # MODULOS
   # Llamar a la parte de aprendizaje de estructura
   server_bnlearn(input, output, session, shared_data)
 

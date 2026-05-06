@@ -5,7 +5,7 @@ ui_sidebar <- function() {
     # seleccionar algoritmos, ajustar parámetros y realizar inferencia
     div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
-      fileInput("datafile", "Selecciona archivo CSV", accept = ".csv"),
+      fileInput("datafile", "Selecciona archivo CSV", accept = c(".csv", ".xlsx", "txt", "rds")),
       "Algoritmo de aprendizaje:",
       uiOutput("algorithm_selector"),
       div(

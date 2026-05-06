@@ -115,9 +115,7 @@ server_graphs <- function(input, output, session, shared_data) {
       bn_new <- bnlearn::drop.arc(bn, from = res$data$from, to = res$data$to)
       shared_data$network <- bn_new
     }
-
     cat("--------------------------\n")
-
   })
 
   # Configuración del nuevo nodo añadido
@@ -132,6 +130,7 @@ server_graphs <- function(input, output, session, shared_data) {
     tryCatch({
       bn_new <- bnlearn::add.node(bn, nombre_nodo)
       shared_data$network <- bn_new
+      tipo_dataset <- shared_data$data_type
 
       if (tipo_nodo == "cualitativo") {
         # CORRECTO: Creamos la columna con NA y le asignamos niveles
@@ -139,21 +138,18 @@ server_graphs <- function(input, output, session, shared_data) {
           rep(NA, nrow(new_data)), 
           levels = unlist(strsplit(niveles, ","))
         )
-        # Actualizar información del dataset en shared_data
-        if (shared_data$data_type == "numericos") {
-          shared_data$data_type <- "mixtos"
-        }
       } else {
         # CORRECTO: Creamos la columna como numérica
         new_data[[nombre_nodo]] <- as.numeric(rep(NA, nrow(new_data)))
         # Actualizar información del dataset en shared_data
-        if (shared_data$data_type == "cualitativos") {
-          shared_data$data_type <- "mixtos"
-        }
       }
-      # Actualizar el dataset en shared_data
+      # Actualizar información del dataset en shared_data
+      if(tipo_nodo != tipo_dataset){
+        shared_data$data_type <- "mixtos"
+      }
       shared_data$dataset_NAs <- TRUE
       shared_data$dataset <- new_data
+      
       # Cerrar el modal automáticamente al terminar
       shiny.semantic::hide_modal(
         id = "modal_añadir_nodo",

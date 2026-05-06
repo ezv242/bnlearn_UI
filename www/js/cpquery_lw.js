@@ -152,10 +152,7 @@ function convertirInputDatasetSimple(inputId, nFilas) {
 
   input.addEventListener("click", input._clickHandler);
 
-  // ============================
-  // ➕ AÑADIR TAG
-  // ============================
-
+  // AÑADIR TAG
   function addTag(filaIndex) {
     const tag = document.createElement("span");
 
@@ -178,10 +175,7 @@ function convertirInputDatasetSimple(inputId, nFilas) {
     updateInput();
   }
 
-  // ============================
-  // 🔄 SINCRONIZAR CON SHINY
-  // ============================
-
+  // SINCRONIZAR CON SHINY
   function updateInput() {
     const seleccionadas = Array.from(tagContainer.children).map(t =>
       parseInt(t.dataset.index)
@@ -191,10 +185,7 @@ function convertirInputDatasetSimple(inputId, nFilas) {
   }
 }
 
-// ============================
-// 🔗 HANDLER SHINY
-// ============================
-
+// HANDLER SHINY
 Shiny.addCustomMessageHandler("convertirInputDatasetSimple", function (msg) {
   convertirInputDatasetSimple(msg.inputId, msg.nFilas);
 });

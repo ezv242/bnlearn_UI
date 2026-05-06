@@ -4,8 +4,23 @@ server_bnlearn <- function(input, output, session, shared_data) {
 
   # Reactive para leer los datos
   dataset <- reactive({
-    req(input$datafile)
-    df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+    #req(input$datafile)
+    #df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+
+    # Caso 1: archivo subido
+    if (!is.null(input$datafile)) {
+      df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+      return(df)
+    }
+
+    # Caso 2: dataset predefinido
+    req(input$selected_dataset)
+
+    df <- read.csv(
+      file.path("data", input$selected_dataset),
+      stringsAsFactors = TRUE
+    )
+
     show_modal("modal_preprocesado")
     df
   })
@@ -24,6 +39,7 @@ server_bnlearn <- function(input, output, session, shared_data) {
     data_continous <- input$datos_continuo
     graph_dirigido <- input$graph_dirigido
     dataset_NAs <- input$datos_NAs
+    
     if (tipo_datos == "cualitativos") {
       shared_data$data_discrete <- TRUE
     }else{
@@ -43,6 +59,7 @@ server_bnlearn <- function(input, output, session, shared_data) {
     # Discretización si se seleccciona esa opción
     discretizacion <- input$discretizacion
     if (discretizacion) {
+
       #TEMPORAL: Para cambiar el tipo del dataset a discreto
       shared_data$data_discrete <- TRUE
       ###########################################################
@@ -67,8 +84,12 @@ server_bnlearn <- function(input, output, session, shared_data) {
         args$idisc <- idisc
       }
 
-      # Ejecutar discretización con argumentos dinámicos
-      data <- do.call(bnlearn::discretize, args)
+      tryCatch({
+        data <- do.call(bnlearn::discretize, args)
+      }, error = function(e) {
+        showNotification(paste("Error en la discretización:", e$message), type = "error")
+        return(NULL)
+      })
     }
 
     # Guardar el dataset preprocesado en shared_data

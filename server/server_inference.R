@@ -68,10 +68,10 @@ server_inference <- function(input, output, session, shared_data) {
       method   = method_inference
     )
 
+    mi_evidencia <- list(evidence_expr)
     result <- tryCatch({ 
 
       if(method_inference == "lw") {
-        # do.call(bnlearn::cpquery, args)
         # Para el caso de lw se debe pasar como evidencia variables del entorno tipo dataset
         # enviar datos al JS y convertir input
         # Suponiendo que tu dataset es shared_data$dataset
