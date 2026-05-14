@@ -5,22 +5,39 @@ server_bnlearn <- function(input, output, session, shared_data) {
   # Reactive para leer los datos
   dataset <- reactive({
     #req(input$datafile)
-    #df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+
+    ext <- file_ext(input$datafile$datapath)
 
     # Caso 1: archivo subido
     if (!is.null(input$datafile)) {
-      df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+      #df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+      df <- switch(ext,
+        csv  = read.csv(input$datafile$datapath, stringsAsFactors = TRUE),
+        txt  = read.table(input$datafile$datapath, header = TRUE, stringsAsFactors = TRUE),
+        rds  = readRDS(input$datafile$datapath),
+        xlsx = as.data.frame(readxl::read_excel(input$datafile$datapath)),
+        stop("Formato de archivo no soportado")
+      )
+      show_modal("modal_preprocesado")
       return(df)
     }
 
     # Caso 2: dataset predefinido
-    req(input$selected_dataset)
+    req(input$nombre_seleccionado)
+    dataset <- input$nombre_seleccionado
 
-    df <- read.csv(
-      file.path("data", input$selected_dataset),
-      stringsAsFactors = TRUE
+    df <- switch(dataset,
+      Asia            = { data("asia"); asia },
+      Alarm           = { data("alarm"); alarm },
+      clgaussian_test = { data("clgaussian.test"); clgaussian.test },
+      Coronary        = { data("coronary"); coronary },
+      gaussian_test   = { data("gaussian.test"); gaussian.test },
+      Hailfinder      = { data("hailfinder"); hailfinder },
+      Insurance       = { data("insurance"); insurance },
+      learning_test   = { data("learning.test"); learning.test },
+      Lizards         = { data("lizards"); lizards },
+      Marks           = { data("marks"); marks }
     )
-
     show_modal("modal_preprocesado")
     df
   })
@@ -39,7 +56,7 @@ server_bnlearn <- function(input, output, session, shared_data) {
     data_continous <- input$datos_continuo
     graph_dirigido <- input$graph_dirigido
     dataset_NAs <- input$datos_NAs
-    
+
     if (tipo_datos == "cualitativos") {
       shared_data$data_discrete <- TRUE
     }else{
@@ -158,11 +175,17 @@ server_bnlearn <- function(input, output, session, shared_data) {
     data <- dataset()
     alg <- input$algorithm
 
-    # No se cumplen las condicones de ser numerico, continuo y sin NAs
-    condicion_datos <- !shared_data$data_continuous ||
-      shared_data$dataset_NAs || shared_data$data_type != "numericos"
+    # Colectar valores lógicos de shared_data de forma segura
+    graph_dirigido <- isTRUE(shared_data$graph_dirigido)
+    data_continuous <- isTRUE(shared_data$data_continuous)
+    dataset_NAs <- isTRUE(shared_data$dataset_NAs)
+    data_type <- shared_data$data_type
 
-    if (!shared_data$graph_dirigido && condicion_datos) {
+    # No se cumplen las condicones de ser numerico, continuo y sin NAs
+    condicion_datos <- !data_continuous ||
+      dataset_NAs || !identical(data_type, "numericos")
+
+    if (!graph_dirigido && condicion_datos) {
       bn <- switch(alg,
         #Algoritmos de aprendizaje de estructura basados en puntuación
         "hc" = bnlearn::hc(data),

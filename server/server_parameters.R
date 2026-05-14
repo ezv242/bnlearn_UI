@@ -5,7 +5,7 @@ data_type_r <- reactiveVal(NULL)
 
 available_method_parameters <- reactive({
   all_methods <- c("bayes", "mle", "hdir", "hard-em",
-                   "mle-g", "hard-em-g", "mle-cg", "hard-em-cg")
+                   "mle-g", "hard-em-g", "mle-cg", "hard-em-cg", "")
 
   # Si no hay preprocesado, mostrar todas las opciones
   if (is.null(shared_data$data_type)) {
@@ -17,11 +17,11 @@ available_method_parameters <- reactive({
   data_discrete <- isTRUE(shared_data$data_discrete)
 
   if (data_type == "cualitativos" || data_discrete) {
-    c("bayes", "mle", "hdir", "hard-em")
+    c("bayes", "mle", "hdir", "hard-em", "")
   } else if (data_continuous) {
-    c("mle-g", "hard-em-g")
+    c("mle-g", "hard-em-g", "")
   } else if (!data_continuous && !data_discrete) {
-    c("mle-cg", "hard-em-cg")
+    c("mle-cg", "hard-em-cg", "")
   } else {
     all_methods
   }
@@ -38,7 +38,7 @@ output$method_parameters_selector <- renderUI({
   dropdown_input("method_parametershm", choices = choices, value = selected)
 })
 
-# Se ejecuta cada vez que se ajusta el modelo, 
+# Se ejecuta cada vez que se ajusta el modelo,
 # para actualizar el tipo de datos y los parámetros dinámicos
 observeEvent(input$fit_model, {
 
@@ -58,8 +58,13 @@ observeEvent(input$fit_model, {
   method <- input$method_parametershm
   shared_data$method_parameters <- method
 
-  # Construir lista de argumentos dinámicamente
-  args <- list(x = bn, data = data, method = method)
+  if(method == "") {
+    # Construir lista de argumentos dinámicamente
+    args <- list(x = bn, data = data)
+  }else {
+    # Construir lista de argumentos dinámicamente
+    args <- list(x = bn, data = data, method = method)
+  }
 
   # Si método bayes
   if (method == "bayes") {
@@ -84,6 +89,7 @@ observeEvent(input$fit_model, {
 
   # Notificación de que el modelo se ha ajustado correctamente
   toast("¡Se ha guardado la configuración del modelo!", class = "success")
+
 })
 
 # Mostrar el modelo ajustado

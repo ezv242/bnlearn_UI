@@ -13,17 +13,20 @@ ui_main <- function() {
         actionLink("reset_app", "Inicio", class = "item")
       ),
 
+      # El menú que se ve igual a "Resultados"
       div(class = "ui dropdown item",
-        "Datos",
+        "Datos", # El nombre del botón en la barra
         div(class = "menu",
-            lapply(list.files("data", pattern="\\.csv$"), function(f) {
-              div(
-                class = "item dataset-item",
-                `data-file` = f,
-                icon("file"),
-                f
-              )
-            })
+            div(class = "item opcion-texto", "Asia"),
+            div(class = "item opcion-texto", "clgaussian_test"),
+            div(class = "item opcion-texto", "Alarm"),
+            div(class = "item opcion-texto", "Insurance"),
+            div(class = "item opcion-texto", "Coronary"),
+            div(class = "item opcion-texto", "gaussian_test"),
+            div(class = "item opcion-texto", "Hailfinder"),
+            div(class = "item opcion-texto", "learning_test"),
+            div(class = "item opcion-texto", "Lizards"),
+            div(class = "item opcion-texto", "Marks")
         )
       ),
 
@@ -44,15 +47,19 @@ ui_main <- function() {
       )
     ),
 
-    tags$script(HTML("
-      $(document).on('click', '.dataset-item', function() {
-        var file = $(this).attr('data-file');
-        Shiny.setInputValue('selected_dataset', file, {priority: 'event'});
-      });
-
-      $(document).ready(function() {
-        $('.ui.dropdown').dropdown();
-      });
-    "))
+    # Mantenemos este JS para que R sepa qué opción tocaste y ACTIVAMOS el dropdown
+    tags$head(
+      tags$script(HTML("
+        $(document).ready(function() {
+          // ACTIVACIÓN NECESARIA
+          $('.ui.dropdown').dropdown();
+          
+          $(document).on('click', '.opcion-texto', function() {
+            var valor = $(this).text().trim(); 
+            Shiny.setInputValue('nombre_seleccionado', valor, {priority: 'event'});
+          });
+        });
+      "))
+    )
   )
 }

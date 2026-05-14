@@ -62,13 +62,20 @@ ui_sidebar <- function() {
               dropdown_input("method_inference",
                             choices = c("lw", "ls"),
                             value = "ls"),
+              checkboxInput("filas_cpquery", "Usar filas como evidencia", 
+                            value = FALSE),
+              numericInput("n_cpquery", "Número de muestras aleatorias", 
+                           value = 1000, min = 1000),
+              numericInput("batch_cpquery",
+                           "Muestras aleatorias generadas de golpe", 
+                           value = 1000, min = 1000),
               textInput("event", "Event (e.g. X == 'yes')"),
               conditionalPanel(
-                condition = "input.method_inference == 'lw'",
+                condition = "input.filas_cpquery == true",
                 textInput("evidencia_lw", "Evidencia"),
               ),
               conditionalPanel(
-                condition = "input.method_inference == 'ls'",
+                condition = "input.filas_cpquery == false",
                 textInput("evidence", "Evidence (e.g. E == 'yes')")
               ),
               div(
@@ -91,6 +98,13 @@ ui_sidebar <- function() {
               dropdown_input("method_inference_cpdist",
                             choices = c("lw", "ls"),
                             value = "ls"),
+              checkboxInput("filas_cpdist", "Usar filas como evidencia",
+                            value = FALSE),
+              numericInput("n_cpdist", "Número de muestras aleatorias",
+                           value = 1000, min = 1000),
+              numericInput("batch_cpdist",
+                           "Muestras aleatorias generadas de golpe",
+                           value = 1000, min = 1000),
               selectizeInput(
                 "tags",
                 "Selecciona nodos a simular:",
@@ -99,17 +113,16 @@ ui_sidebar <- function() {
                 options = list(create = TRUE)
               ),
               conditionalPanel(
-                condition = "input.method_inference_cpdist == 'lw'",
+                condition = "input.filas_cpdist == true",
                 textInput("evidence_cpdist_lw", "Evidencia"),
               ),
               conditionalPanel(
-                condition = "input.method_inference_cpdist == 'ls'",
+                condition = "input.filas_cpdist == false",
                 textInput("evidence_cpdist", "Evidence (e.g. E == 'yes')")
               ),
               div(
                 style = "display: flex; gap: 10px;",
-                action_button("run_cpdist", "Hacer CPDIST"),
-              )
+                action_button("run_cpdist", "Hacer CPDIST"),              )
             )
           )
         )

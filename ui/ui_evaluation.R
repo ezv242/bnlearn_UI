@@ -55,11 +55,11 @@ ui_evaluation <- function() {
         choices = c("k-fold", "hold-out")),
       conditionalPanel(
         condition = "input.cv_strategy == 'k-fold'",
-        numericInput("k_cv", "K subgrupos del dataset", min = 1, value = 1)
+        numericInput("k_cv_fold", "K subgrupos del dataset", min = 1, value = 1)
       ),
       conditionalPanel(
         condition = "input.cv_strategy == 'hold-out'",
-        numericInput("k_cv", "Dividir los datos k veces", min = 0, value = 1),
+        numericInput("k_cv_hold", "Dividir los datos k veces", min = 0, value = 1),
         numericInput("m_cv", "Tamaño m del conjunto de test para validación", min = 1, placeholder = "Introduce un número")
       ),
       numericInput("runs_cv", "Número de veces para ejecutar la validación, runs", min = 1, value = 1),

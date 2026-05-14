@@ -13,7 +13,7 @@ server_inference <- function(input, output, session, shared_data) {
 
   # Configurar input de evidencia para lw cuando se selecciona el método
   observe({
-    if (!is.null(input$method_inference) && input$method_inference == "lw" && !is.null(shared_data$dataset)) {
+    if (!is.null(input$method_inference) && input$filas_cpquery == TRUE && !is.null(shared_data$dataset)) {
       session$sendCustomMessage(
         type = "convertirInputDatasetSimple",
         message = list(
@@ -26,7 +26,7 @@ server_inference <- function(input, output, session, shared_data) {
 
   # Configurar input de evidencia para cpdist lw
   observe({
-    if (!is.null(input$method_inference_cpdist) && input$method_inference_cpdist == "lw" && !is.null(shared_data$dataset)) {
+    if (!is.null(input$method_inference_cpdist) && input$filas_cpdist == TRUE && !is.null(shared_data$dataset)) {
       session$sendCustomMessage(
         type = "convertirInputDatasetSimple",
         message = list(
@@ -44,56 +44,55 @@ server_inference <- function(input, output, session, shared_data) {
     fitted <- shared_data$bn_fitted
     if (is.null(fitted)) return("Error: el modelo aún no se ha ajustado")
 
-    # Definir los strings originales del input
-    event_str    <- trimws(input$event)
-    evidence_str <- trimws(input$evidence)
-
-    # Reemplazar comas por &
-    event_str <- gsub(",", "&", event_str)
-    evidence_str <- gsub(",", "&", evidence_str)
-
-    event_expr    <- tryCatch(parse(text = event_str)[[1]],    error = function(e) NULL)
-    evidence_expr <- tryCatch(parse(text = evidence_str)[[1]], error = function(e) NULL)
-
-    #if (is.null(event_expr))    return("Error: expresión de evento inválida")
-    #if (is.null(evidence_expr)) return("Error: expresión de evidencia inválida")
-
+    filas_cpquery <- input$filas_cpquery
     method_inference <- input$method_inference
+    # Definir los strings originales del input
+    event_str    <- input$event
+    evidence_str <- input$evidence
+
+    # Se obtiene el evento y la evidencia en forma de expresion
+    event_expr <- tryCatch(getExpressionFromText(event_str), error = function(e) NULL)
+    evidence_expr <- tryCatch(getExpressionFromText(evidence_str), error = function(e) NULL)
+
+    if(is.null(event_expr)) return("Error: Expresión del evento inválida.")
+    if(!filas_cpquery && is.null(evidence_expr)) return("Error: Expresión de evidencia inválida.")
 
     # Construir lista de argumentos base
     args <- list(
       fitted   = fitted,
       event    = event_expr,
-      evidence = evidence_expr,
       method   = method_inference
     )
 
-    mi_evidencia <- list(evidence_expr)
-    result <- tryCatch({ 
+    # Añadir parametros generales
+    if(!is.null(input$n_cpquery)) args$n <- input$n_cpquery
+    if(!is.null(input$batch_cpquery)) args$batch <- input$batch_cpquery
 
-      if(method_inference == "lw") {
-        # Para el caso de lw se debe pasar como evidencia variables del entorno tipo dataset
-        # enviar datos al JS y convertir input
-        # Suponiendo que tu dataset es shared_data$dataset
-        #Las columnas a ser extraidas (eventos)
-        columnasText <- getStringNodes(event_str)
-        #Seleccionar solo columnas que estén en el dataset AND que sean parte del evento
-
-        columnas <- match(columnasText, names(shared_data$dataset))
-        #Las filas seleccionadas por el usuario como evidencia
-        filas <- input$evidencia_lw + 1
-        do.call(bnlearn::cpquery,
-          list(
-            fitted = fitted,
-            event = event_expr,
-            evidence = as.list(shared_data$dataset[filas, -columnas]),
-            method = method_inference
-          )
-        )
-
+    # Si se usan las filas del dataset como evidencia
+    if(filas_cpquery){
+      #Las columnas a ser extraidas (eventos)
+      columnas_text <- getStringNodes(event_str)
+      #Seleccionar columnas que del dataset AND que son parte del evento
+      columnas <- match(columnas_text, names(shared_data$dataset))
+      #Las filas seleccionadas por el usuario como evidencia
+      filas <- input$evidencia_lw + 1 # Se obtienen las filas seleccionadas
+      evidencia_dataset <- shared_data$dataset[filas, -columnas]
+      if(method_inference == "lw"){
+        args$evidence <- as.list(evidencia_dataset)#Formato lista
       }else{
-        do.call(bnlearn::cpquery, args)
+        args$evidence <- getExpressionFromDataset(evidencia_dataset)#Formato expresión
       }
+    # Si se usa el cuadro de texto de expresión como evidencia
+    }else{
+      if(method_inference == "lw"){
+        args$evidence <- getListFormat(evidence_str)#Formato lista
+      }else{
+        args$evidence <- evidence_expr#Formato expresión
+      }
+    }
+    # Se ejecuta la inferencia
+    result <- tryCatch({ 
+      do.call(bnlearn::cpquery, args)
     }, error = function(e) {
       paste("Error completo:", conditionMessage(e))
     })
@@ -107,49 +106,50 @@ server_inference <- function(input, output, session, shared_data) {
     fitted <- shared_data$bn_fitted
     if (is.null(fitted)) return("Error: el modelo aún no se ha ajustado")
 
+    filas_cpdist <- input$filas_cpdist
+    method_inference_cpdist <- input$method_inference_cpdist
     # Nodos seleccionados para el evento
     nodos_evento <- input$tags
+    if(is.null(nodos_evento) || length(nodos_evento) == 0) return("Error: Selecciona al menos un nodo para el evento.")
 
     # Cadena de evidencia
-    evidence_str <- trimws(input$evidence_cpdist)
-    evidence_str <- gsub(",", "&", evidence_str)
-    evidence_str <- tryCatch(parse(text = evidence_str)[[1]], error = function(e) NULL)
-
-    method_inference_cpdist <- input$method_inference_cpdist
+    evidence_str <- input$evidence_cpdist
+    evidence_expr <- tryCatch(getExpressionFromText(evidence_str), error = function(e) NULL)
 
     args <- list(
       fitted   = fitted,
       event    = nodos_evento,
-      evidence = evidence_str,
       method   = method_inference_cpdist
     )
 
-    result <- tryCatch({ 
-      
-      if(method_inference_cpdist == "lw") {
-        # do.call(bnlearn::cpquery, args)
-        # Para el caso de lw se debe pasar como evidencia variables del entorno tipo dataset
-        # enviar datos al JS y convertir input
-        #Seleccionar solo columnas que estén en el dataset AND que sean parte del evento
-        columnas <- match(nodos_evento, names(shared_data$dataset))
-        #Las filas seleccionadas por el usuario como evidencia
-        filas <- input$evidence_cpdist_lw + 1
-        do.call(bnlearn::cpdist,
-          list(
-            fitted = fitted,
-            event = nodos_evento,
-            evidence = as.list(shared_data$dataset[filas, -columnas]),
-            method = method_inference_cpdist
-          )
-        )
-      }else{
-        do.call(bnlearn::cpdist, args)
-      }
+    # Añadir parametros generales
+    if(!is.null(input$n_cpdist)) args$n <- input$n_cpdist
+    if(!is.null(input$batch_cpdist)) args$batch <- input$batch_cpdist
 
+    if(filas_cpdist){
+      columnas <- match(nodos_evento, names(shared_data$dataset))
+      #Las filas seleccionadas por el usuario como evidencia
+      filas <- input$evidence_cpdist_lw + 1 # Se obtienen las filas seleccionadas
+      evidencia_dataset <- shared_data$dataset[filas, -columnas]
+      if(method_inference_cpdist == "lw"){
+        args$evidence <- as.list(evidencia_dataset)#Formato lista
+      }else{
+        args$evidence <- getExpressionFromDataset(evidencia_dataset)#Formato expresión
+      }
+    }else{
+      if(method_inference_cpdist == "lw"){
+        args$evidence <- getListFormat(evidence_str)#Formato lista
+      }else{
+        args$evidence <- evidence_expr#Formato expresión
+      }
+    }
+
+    # Se ejecuta la inferencia
+    result <- tryCatch({ 
+      do.call(bnlearn::cpquery, args)
     }, error = function(e) {
       paste("Error completo:", conditionMessage(e))
     })
-
     result
   })
 
@@ -192,4 +192,71 @@ getStringNodes <- function(event_str) {
   }, USE.NAMES = FALSE)
 
   as.list(nodes)  # devolver como lista de nodos
+}
+
+# Función para transformar input de texto al formato de evidencia
+getListFormat <- function(text_str) {
+
+  parts <- strsplit(text_str, ",|&")[[1]]
+  parts <- trimws(parts)
+  lista_final <- list() # Aquí iremos guardando todo
+
+  # 2. Bucle iterativo
+  for (p in parts) {
+    # Dividir por el "=="
+    # Usamos un if por si acaso una parte no tiene "=="
+    if (grepl("==", p)) {
+      res <- strsplit(p, "==")[[1]]
+
+      # Limpiar el nombre (Clave)
+      nodo <- as.character(trimws(res[1]))
+      valor <- as.character(trimws(res[2]))
+
+      # Limpiar el valor y quitarle las comillas
+      valor <- gsub("['\"]", "", valor)
+
+      # Aquí usamos los corchetes dobles para crear la clave con el nombre
+      # que está guardado en la variable 'nodo'
+      lista_final[[nodo]] <- valor
+    }
+  }
+  lista_final
+}
+
+getExpressionFromText <- function(text_str){
+  # Eliminar especios vacios
+  text_str <- trimws(text_str)
+  # Reemplazar comas por &
+  text_str <- gsub(",", "&", text_str)
+  # Convertir el texto en una expresion de R
+  #text_str    <- tryCatch(parse(text = text_str)[[1]],    error = function(e) NULL)
+  text_str    <- parse(text = text_str)[[1]]
+  text_str
+}
+
+
+getExpressionFromDataset <- function(dataset){
+  # Asegurarnos de trabajar con una sola fila
+  fila <- as.list(dataset)
+  nombres <- names(fila)
+
+  # Construir cada fragmento de la expresión
+  fragmentos <- sapply(nombres, function(nom) {
+    valor <- fila[[nom]]
+
+    # Si es factor, extraemos su etiqueta de texto y ponemos comillas
+    if (is.factor(valor) || is.character(valor)) {
+      return(paste0("(", nom, " == '", as.character(valor), "')"))
+    }
+    # Si es numérico o lógico, lo ponemos tal cual (sin comillas)
+    else {
+      return(paste0("(", nom, " == ", valor, ")"))
+    }
+  })
+
+  # Unir todos los fragmentos con &
+  texto_final <- paste(fragmentos, collapse = " & ")
+
+  # Convertir a expresión de R
+  parse(text = texto_final)[[1]]
 }

@@ -138,13 +138,19 @@ result_cv <- eventReactive(input$run_cv, {
   }
 
   estrategia_cv <- input$cv_strategy
-  k <- if (!is.null(input$k_cv)) input$k_cv else NULL
+  k_fold <- if (!is.null(input$k_cv_fold)) input$k_cv_fold else NULL
+  k_hold <- if (!is.null(input$k_cv_hold)) input$k_cv_hold else NULL
   m <- if (!is.null(input$m_cv)) input$m_cv else NULL
   runs <- if (!is.null(input$runs_cv)) input$runs_cv else NULL
   loss_functions <- input$loss_functions
   predict_method_cv <- input$predict_method_cv
   nodo_objetivo <- input$target_cv
 
+  if(is.null(k_fold)){
+    k <- k_fold
+  }else{
+    k <- k_hold
+  }
 
   args <- list(
     data = shared_data$dataset,

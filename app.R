@@ -6,6 +6,8 @@ library(shiny.semantic)
 library(bnlearn)
 library(Rgraphviz)
 library(visNetwork)
+library(tools)
+library(readxl)
 
 # Cargar scripts de UI
 source("ui/ui_main.R")
