@@ -9,17 +9,22 @@ ui_results <- function() {
         list(
           menu_item = "Red Bayesiana",
           content = segment(
-            # Representación interactiva de la red
-            div(
-              #class = "ui segment",
-              #style = "display: flex; flex-direction: column; gap: 10px;",
+            class = "ui segment",
+            # PASO 1: Fijar altura al segmento (80% del alto de pantalla) y usar flexbox
+            style = "height: 100vh; display: flex; flex-direction: column; padding: 0; overflow: hidden;",
 
-              # Contenedor del grafo interactivo
-              div(
-                id = "graph-container",
-                style = "height: 800px;",
-                visNetworkOutput("graph", height = "100%")
-              )
+            # PASO 2: Contenedor del grafo (65%)
+            div(
+              id = "graph-container",
+              style = "flex: 0 0 65%; position: relative; border-bottom: 1px solid #ddd;",
+              visNetworkOutput("graph", height = "100%") 
+            ),
+
+            # PASO 3: Bloque inferior (35%)
+            div(
+              style = "flex: 0 0 35%; overflow-y: auto; background-color: #f9f9f9; padding: 10px;",
+              tags$b("Salida de Inferencia:"),
+              uiOutput("output_inference")
             )
           )
         ),
@@ -54,8 +59,8 @@ ui_results <- function() {
     # Modal para añadir nodo a la red interactuvamente
     ui_addNode(),
 
-    verbatimTextOutput("inference_output"),
-    verbatimTextOutput("selectedRows"),
-    tableOutput("datosFiltrados")
+    #verbatimTextOutput("inference_output"),
+    #verbatimTextOutput("selectedRows"),
+    #tableOutput("datosFiltrados")
   )
 }

@@ -5,6 +5,7 @@ ui_evaluation <- function() {
     # Score del modelo
     div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
+      h4(class = "ui dividing header", "Evaluación Score"),
       "Metodo score del modelo:",
       uiOutput("method_score_selector"),
       checkboxInput("by.node", "by.node", value = FALSE),
@@ -44,12 +45,18 @@ ui_evaluation <- function() {
         style = "display: flex; gap: 10px;",
         action_button("run_score", "Calcular score"),
       ),
-      verbatimTextOutput("score_output"),
+      div(
+        style = "flex: 0 0 35%; overflow-y: auto; background-color: #f9f9f9; padding: 10px;",
+        tags$b("Salida de Score:"),
+        verbatimTextOutput("score_output")
+      )
     ),
 
     # Validación cruzada
     div(class = "ui segment",
       style = "display: flex; flex-direction: column; gap: 10px;",
+      # Título tipo Header
+      h4(class = "ui dividing header", "Validación Cruzada"),
       "Seleccionar estrategia de validación cruzada:",
       dropdown_input("cv_strategy",
         choices = c("k-fold", "hold-out")),
@@ -83,7 +90,11 @@ ui_evaluation <- function() {
         style = "display: flex; gap: 10px;",
         action_button("run_cv", "Ejecutar validación cruzada"),
       ),
-      verbatimTextOutput("cv_output")
+      div(
+        style = "flex: 0 0 35%; overflow-y: auto; background-color: #f9f9f9; padding: 10px;",
+        tags$b("Salida de Cross Validation:"),
+        verbatimTextOutput("cv_output")
+      )
     )
   )
 }

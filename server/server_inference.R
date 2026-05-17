@@ -1,8 +1,10 @@
 server_inference <- function(input, output, session, shared_data) {
 
+  output_result <- reactiveVal(NULL)
 
   # Actualizar selectizeInput dinámicamente
   observe({
+    req(shared_data$dataset)
     updateSelectizeInput(
       session,
       "tags",
@@ -13,7 +15,7 @@ server_inference <- function(input, output, session, shared_data) {
 
   # Configurar input de evidencia para lw cuando se selecciona el método
   observe({
-    if (!is.null(input$method_inference) && input$filas_cpquery == TRUE && !is.null(shared_data$dataset)) {
+    if (!is.null(input$method_inference_cpquery) && input$filas_cpquery == TRUE && !is.null(shared_data$dataset)) {
       session$sendCustomMessage(
         type = "convertirInputDatasetSimple",
         message = list(
@@ -39,13 +41,13 @@ server_inference <- function(input, output, session, shared_data) {
 
 ##############################################################################
 # Reactive para ejecutar CPQUERY
-  inference_result <- eventReactive(input$run_inference, {
+  cpquery <- eventReactive(input$run_inference, {
 
     fitted <- shared_data$bn_fitted
     if (is.null(fitted)) return("Error: el modelo aún no se ha ajustado")
 
     filas_cpquery <- input$filas_cpquery
-    method_inference <- input$method_inference
+    method_inference <- input$method_inference_cpquery
     # Definir los strings originales del input
     event_str    <- input$event
     evidence_str <- input$evidence
@@ -111,6 +113,7 @@ server_inference <- function(input, output, session, shared_data) {
     # Nodos seleccionados para el evento
     nodos_evento <- input$tags
     if(is.null(nodos_evento) || length(nodos_evento) == 0) return("Error: Selecciona al menos un nodo para el evento.")
+    str(nodos_evento)
 
     # Cadena de evidencia
     evidence_str <- input$evidence_cpdist
@@ -118,7 +121,7 @@ server_inference <- function(input, output, session, shared_data) {
 
     args <- list(
       fitted   = fitted,
-      event    = nodos_evento,
+      nodes    = nodos_evento,
       method   = method_inference_cpdist
     )
 
@@ -146,7 +149,7 @@ server_inference <- function(input, output, session, shared_data) {
 
     # Se ejecuta la inferencia
     result <- tryCatch({ 
-      do.call(bnlearn::cpquery, args)
+      do.call(bnlearn::cpdist, args)
     }, error = function(e) {
       paste("Error completo:", conditionMessage(e))
     })
@@ -155,28 +158,35 @@ server_inference <- function(input, output, session, shared_data) {
 
 ##############################################################################
 # Renderizar resultados
-  output$inference_output <- renderText({
-    res <- inference_result()
-    if (is.numeric(res)) {
-      paste("Resultado de la inferencia:", round(res, 3))
-    } else {
-      res
-    }
+
+  observeEvent(input$run_inference, {
+    output_result("cpquery")
   })
 
-  output$selectedRows <- renderPrint({
-    # input$evidencia_lw es un vector de índices de fila (empezando en 0)
-    req(input$evidencia_lw)
-    
-    # Si quieres usarlo directamente en R (dataset indexa desde 1)
-    filas <- input$evidencia_lw + 1
-    filas
+  observeEvent(input$run_cpdist, {
+    output_result("cpdist")
   })
-  
-  output$datosFiltrados <- renderTable({
-    req(input$evidencia_lw)
-    filas <- input$evidencia_lw + 1
-    shared_data$dataset[filas, ]
+
+  output$render_cpquery_text <- renderPrint({
+    cpquery() # Evaluamos el eventReactive de cpquery
+  })
+
+  output$render_cpdist_text <- renderPrint({
+    cpdist() # Evaluamos el eventReactive de cpdist
+  })
+
+  # 4. El renderizado dinámico: SOLO muestra el último que cambió
+  output$output_inference <- renderUI({
+    req(output_result())
+
+    if (output_result() == "cpquery") {
+      # Devolvemos el texto de validación cruzada
+      verbatimTextOutput("render_cpquery_text")
+
+    } else if (output_result() == "cpdist") {
+      # Devolvemos, por ejemplo, una tabla u otro texto
+      verbatimTextOutput("render_cpdist_text")
+    }
   })
 }
 

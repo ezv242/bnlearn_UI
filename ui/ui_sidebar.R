@@ -59,7 +59,7 @@ ui_sidebar <- function() {
               #El lw funciona con redes grandes y continuas,
               # el exact con redes pequeñas y discretas
               "Método de inferencia:",
-              dropdown_input("method_inference",
+              dropdown_input("method_inference_cpquery",
                             choices = c("lw", "ls"),
                             value = "ls"),
               checkboxInput("filas_cpquery", "Usar filas como evidencia", 
@@ -110,7 +110,8 @@ ui_sidebar <- function() {
                 "Selecciona nodos a simular:",
                 choices = NULL,
                 multiple = TRUE,
-                options = list(create = TRUE)
+                options = list(create = TRUE),
+                width = "100%"
               ),
               conditionalPanel(
                 condition = "input.filas_cpdist == true",
