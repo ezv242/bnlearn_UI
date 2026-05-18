@@ -9,4 +9,6 @@ usando el paquete bnlearn y shiny.semantic.
 
 ## Ejecutar
 ```r
-shiny::runApp()
+docker build -t tfg-bayes .
+docker run -p 3838:3838 tfg-bayes
+http://localhost:3838/ (desde el navegador)
