@@ -44,6 +44,7 @@ available_method_score <- reactive({
 
 # Mostrar por pantalla la lista desplegable dinamica de metodos score disponibles
 output$method_score_selector <- renderUI({
+  req(shared_data$data_type)
   choices <- available_method_score()
   selected <- if (!is.null(input$method_score) && input$method_score %in% choices) {
     input$method_score

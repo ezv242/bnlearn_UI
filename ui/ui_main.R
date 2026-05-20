@@ -28,13 +28,6 @@ ui_main <- function() {
             div(class = "item opcion-texto", "Lizards"),
             div(class = "item opcion-texto", "Marks")
         )
-      ),
-
-      a(class = "item", "Resultados"),
-
-      div(class = "right menu",
-        div(class = "item", icon("user")),
-        div(class = "item", icon("settings"))
       )
     ),
 

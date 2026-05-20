@@ -16,6 +16,7 @@ source("ui/ui_results.R")
 source("ui/ui_preprocess.R")
 source("ui/ui_addNode.R")
 source("ui/ui_evaluation.R")
+source("ui/ui_inference.R")
 
 # Cargar scripts de Server
 source("server/server_main.R")
