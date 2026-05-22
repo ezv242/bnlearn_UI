@@ -92,6 +92,7 @@ server_inference <- function(input, output, session, shared_data) {
         args$evidence <- evidence_expr#Formato expresión
       }
     }
+    str(evidence_expr)
     # Se ejecuta la inferencia
     result <- tryCatch({ 
       do.call(bnlearn::cpquery, args)
@@ -222,8 +223,12 @@ getListFormat <- function(text_str) {
       nodo <- as.character(trimws(res[1]))
       valor <- as.character(trimws(res[2]))
 
+      num <- suppressWarnings(as.numeric(valor))
+      if (!is.na(num)) {
+        valor <- num
+      }
       # Limpiar el valor y quitarle las comillas
-      valor <- gsub("['\"]", "", valor)
+      #valor <- gsub("['\"]", "", valor)
 
       # Aquí usamos los corchetes dobles para crear la clave con el nombre
       # que está guardado en la variable 'nodo'
@@ -242,6 +247,36 @@ getExpressionFromText <- function(text_str){
   #text_str    <- tryCatch(parse(text = text_str)[[1]],    error = function(e) NULL)
   text_str    <- parse(text = text_str)[[1]]
   text_str
+}
+
+getExpressionFromText2 <- function(text_str){
+  parts <- strsplit(text_str, ",|&")[[1]]
+  parts <- trimws(parts)
+  text_final <- ""
+  text_operacion <- ""
+
+  # Bucle iterativo
+  for (p in parts) {
+    if (text_final != "") text_final <- paste0(text_final, " & ")
+    # Dividir por el "=="
+    # Se usa un if por si acaso una parte no tiene "=="
+    if (grepl("==|>=|<=|>|<", p)) {
+      # Se extrae el operador exacto y luego se parte por ese operador
+      operador <- regmatches(p, regexpr("==|>=|<=|>|<", p))
+      res <- strsplit(p, "==|>=|<=|>|<")[[1]]
+
+      # Limpiar el nombre (Clave)
+      nodo <- as.character(trimws(res[1]))
+      valor <- as.character(trimws(res[2]))
+
+      num <- suppressWarnings(as.numeric(valor)) # Se comprueba si es numérico
+      if (!is.na(num)) {
+        valor <- num
+      }
+
+      text_operacion <- paste0("(", nodo, " ", operador, " ", valor, ")")
+    }
+  }
 }
 
 

@@ -2,12 +2,10 @@
 # usando uno de los algoritmos
 server_bnlearn <- function(input, output, session, shared_data) {
 
-  # Reactive para leer los datos
-  dataset <- reactive({
-    #req(input$datafile)
+  dataset <- reactiveVal()
 
+  observeEvent(input$datafile, {
     ext <- file_ext(input$datafile$datapath)
-
     # Caso 1: archivo subido
     if (!is.null(input$datafile)) {
       #df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
@@ -19,14 +17,16 @@ server_bnlearn <- function(input, output, session, shared_data) {
         stop("Formato de archivo no soportado")
       )
       show_modal("modal_preprocesado")
-      return(df)
+      dataset(df)
+      shared_data$dataset <- df
     }
+  })
 
+  observeEvent({input$nombre_seleccionado}, {
     # Caso 2: dataset predefinido
     req(input$nombre_seleccionado)
-    dataset <- input$nombre_seleccionado
-
-    df <- switch(dataset,
+    dataset_name <- input$nombre_seleccionado
+    df <- switch(dataset_name,
       Asia            = { data("asia"); asia },
       Alarm           = { data("alarm"); alarm },
       clgaussian_test = { data("clgaussian.test"); clgaussian.test },
@@ -39,12 +39,8 @@ server_bnlearn <- function(input, output, session, shared_data) {
       Marks           = { data("marks"); marks }
     )
     show_modal("modal_preprocesado")
-    df
-  })
-
-  # Guardar dataset en shared_data
-  observe({
-    shared_data$dataset <- dataset()
+    dataset(df)
+    shared_data$dataset <- df
   })
 
   #Reactive para hacer el preprocesamiento de los datos
