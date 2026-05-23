@@ -8,6 +8,7 @@ library(Rgraphviz)
 library(visNetwork)
 library(tools)
 library(readxl)
+library(DT)
 
 # Cargar scripts de UI
 source("ui/ui_main.R")

@@ -53,8 +53,8 @@ server_inference <- function(input, output, session, shared_data) {
     evidence_str <- input$evidence
 
     # Se obtiene el evento y la evidencia en forma de expresion
-    event_expr <- tryCatch(getExpressionFromText(event_str), error = function(e) NULL)
-    evidence_expr <- tryCatch(getExpressionFromText(evidence_str), error = function(e) NULL)
+    event_expr <- tryCatch(getEvidenceFromText(event_str, FALSE), error = function(e) NULL)
+    evidence_expr <- tryCatch(getEvidenceFromText(evidence_str, FALSE ), error = function(e) NULL)
 
     if(is.null(event_expr)) return("Error: Expresión del evento inválida.")
     if(!filas_cpquery && is.null(evidence_expr)) return("Error: Expresión de evidencia inválida.")
@@ -87,12 +87,11 @@ server_inference <- function(input, output, session, shared_data) {
     # Si se usa el cuadro de texto de expresión como evidencia
     }else{
       if(method_inference == "lw"){
-        args$evidence <- getListFormat(evidence_str)#Formato lista
+        args$evidence <- getEvidenceFromText(evidence_str, TRUE)#Formato lista
       }else{
         args$evidence <- evidence_expr#Formato expresión
       }
     }
-    str(evidence_expr)
     # Se ejecuta la inferencia
     result <- tryCatch({ 
       do.call(bnlearn::cpquery, args)
@@ -118,7 +117,7 @@ server_inference <- function(input, output, session, shared_data) {
 
     # Cadena de evidencia
     evidence_str <- input$evidence_cpdist
-    evidence_expr <- tryCatch(getExpressionFromText(evidence_str), error = function(e) NULL)
+    evidence_expr <- tryCatch(getEvidenceFromText(evidence_str, FALSE), error = function(e) NULL)
 
     args <- list(
       fitted   = fitted,
@@ -142,7 +141,7 @@ server_inference <- function(input, output, session, shared_data) {
       }
     }else{
       if(method_inference_cpdist == "lw"){
-        args$evidence <- getListFormat(evidence_str)#Formato lista
+        args$evidence <- getEvidenceFromText(evidence_str, TRUE)#Formato lista
       }else{
         args$evidence <- evidence_expr#Formato expresión
       }
@@ -205,59 +204,15 @@ getStringNodes <- function(event_str) {
   as.list(nodes)  # devolver como lista de nodos
 }
 
-# Función para transformar input de texto al formato de evidencia
-getListFormat <- function(text_str) {
-
+getEvidenceFromText <- function(text_str, esLista){
   parts <- strsplit(text_str, ",|&")[[1]]
   parts <- trimws(parts)
-  lista_final <- list() # Aquí iremos guardando todo
-
-  # 2. Bucle iterativo
-  for (p in parts) {
-    # Dividir por el "=="
-    # Usamos un if por si acaso una parte no tiene "=="
-    if (grepl("==", p)) {
-      res <- strsplit(p, "==")[[1]]
-
-      # Limpiar el nombre (Clave)
-      nodo <- as.character(trimws(res[1]))
-      valor <- as.character(trimws(res[2]))
-
-      num <- suppressWarnings(as.numeric(valor))
-      if (!is.na(num)) {
-        valor <- num
-      }
-      # Limpiar el valor y quitarle las comillas
-      #valor <- gsub("['\"]", "", valor)
-
-      # Aquí usamos los corchetes dobles para crear la clave con el nombre
-      # que está guardado en la variable 'nodo'
-      lista_final[[nodo]] <- valor
-    }
-  }
-  lista_final
-}
-
-getExpressionFromText <- function(text_str){
-  # Eliminar especios vacios
-  text_str <- trimws(text_str)
-  # Reemplazar comas por &
-  text_str <- gsub(",", "&", text_str)
-  # Convertir el texto en una expresion de R
-  #text_str    <- tryCatch(parse(text = text_str)[[1]],    error = function(e) NULL)
-  text_str    <- parse(text = text_str)[[1]]
-  text_str
-}
-
-getExpressionFromText2 <- function(text_str){
-  parts <- strsplit(text_str, ",|&")[[1]]
-  parts <- trimws(parts)
-  text_final <- ""
+  text_final <- ""# En caso de ser texto
+  lista_final <- list()# En caso de ser lista
   text_operacion <- ""
 
   # Bucle iterativo
   for (p in parts) {
-    if (text_final != "") text_final <- paste0(text_final, " & ")
     # Dividir por el "=="
     # Se usa un if por si acaso una parte no tiene "=="
     if (grepl("==|>=|<=|>|<", p)) {
@@ -266,16 +221,40 @@ getExpressionFromText2 <- function(text_str){
       res <- strsplit(p, "==|>=|<=|>|<")[[1]]
 
       # Limpiar el nombre (Clave)
-      nodo <- as.character(trimws(res[1]))
-      valor <- as.character(trimws(res[2]))
+      nodo <- trimws(res[1])
+      valor <- trimws(res[2])
+
+      valor <- gsub("['\"]", "", valor)
 
       num <- suppressWarnings(as.numeric(valor)) # Se comprueba si es numérico
       if (!is.na(num)) {
         valor <- num
+      } else {
+        valor <- paste0("'", valor, "'") # Es texto, necesita comillas para el parse
       }
 
       text_operacion <- paste0("(", nodo, " ", operador, " ", valor, ")")
+
+      #Si la salida sera una lista
+      if((esLista == TRUE)){
+        lista_final[[nodo]] <- valor
+      # Si la salida no es una lista se construye el texto
+      }else{
+        # Se pega el " & " SOLO si ya había algo guardado en text_final
+        if (text_final == "") {
+          text_final <- text_operacion
+        } else {
+          text_final <- paste0(text_final, " & ", text_operacion)
+        }
+      }
     }
+  }
+  if(esLista == TRUE){
+    return(lista_final)
+  }else{
+    #Se transforma en expresion
+    expresion_final <- parse(text = text_final)[[1]]
+    return(expresion_final)
   }
 }
 

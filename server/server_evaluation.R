@@ -52,7 +52,6 @@ output$method_score_selector <- renderUI({
   }
   dropdown_input("method_score", choices = choices, value = selected)
 })
-# Añade esta línea justo debajo de tu renderUI:
 outputOptions(output, "method_score_selector", suspendWhenHidden = FALSE)
 
 ##################################################################################
@@ -125,6 +124,7 @@ output$score_output <- renderText({
     res
   }
 })
+outputOptions(output, "score_output", suspendWhenHidden = FALSE)
 
 ##################################################################################
 # Reactive para ejecutar validación cruzada
@@ -184,6 +184,7 @@ result_cv <- eventReactive(input$run_cv, {
 output$cv_output <- renderPrint({
   result_cv()
 })
+outputOptions(output, "cv_output", suspendWhenHidden = FALSE)
 
 # Actualizar selectizeInput dinámicamente
 observe({

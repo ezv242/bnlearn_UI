@@ -52,6 +52,14 @@ ui_results <- function() {
             # Evaluación del modelo
             ui_evaluation()
           )
+        ),
+        list(
+          menu_item = "Datos",
+          content = segment(
+            mainPanel(
+              DTOutput("tabla_datos")
+            )
+          )
         )
       )
     ),

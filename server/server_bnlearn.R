@@ -265,4 +265,12 @@ server_bnlearn <- function(input, output, session, shared_data) {
   #output$network <- renderPrint({
   #  bn_model()
   #})
+
+  output$tabla_datos <- renderDT({
+    datatable(
+      shared_data$dataset,
+      options = list(pageLength = 25), # Muestra 25 filas por página
+      filter = "top"                   # Añade filtros por columna arriba
+    )
+  })
 }
