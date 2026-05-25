@@ -81,15 +81,16 @@ observeEvent(input$fit_model, {
   args$keep.fitted <- input$keep_fitted
   args$debug <- input$debug
 
-  # Ejecutar bn.fit con argumentos dinámicos
-  fitted <- do.call(bn.fit, args)
-
-  # Guardar el modelo ajustado
-  shared_data$bn_fitted <- fitted
-
-  # Notificación de que el modelo se ha ajustado correctamente
-  toast("¡Se ha guardado la configuración del modelo!", class = "success")
-
+  tryCatch({
+    # Ejecutar bn.fit con argumentos dinámicos
+    fitted <- do.call(bn.fit, args)
+    # Guardar el modelo ajustado
+    shared_data$bn_fitted <- fitted
+    # Notificación de que el modelo se ha ajustado correctamente
+    toast("¡Se ha guardado la configuración del modelo!", class = "success")
+  }, error = function(e) {
+  showNotification(paste("Error al ajustar el modelo:", e$message), type = "error")
+  })
 })
 
 # Mostrar el modelo ajustado

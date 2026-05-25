@@ -85,7 +85,7 @@ tabset(
                     ),
                     div(
                         style = "display: flex; gap: 10px; margin-top: 5px;",
-                        action_button("run_cpdist", "Hacer CPDIST"),
+                        action_button("run_cpdist", "Hacer Inferencia"),
                     )
                 )
             )

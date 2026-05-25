@@ -64,6 +64,8 @@ insertUI(
       arcs_df <- data.frame(
         from = character(0), to = character(0), stringsAsFactors = FALSE
       )
+    }else {
+      arcs_df$id <- paste0(arcs_df$from, "-", arcs_df$to)
     }
     edges(arcs_df)
   }, ignoreNULL = TRUE)
@@ -107,7 +109,7 @@ insertUI(
           <div id='nodo-custom-popup' class='ui fluid card' style='
             position: absolute; 
             z-index: 999; 
-            width: 200px; 
+            width: 300px; 
             box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
             left: ${canvasPosition.x + 15}px; 
             top: ${canvasPosition.y - 40}px;
@@ -141,23 +143,23 @@ observeEvent(input$nodo_seleccionado_info, {
   info <- input$nodo_seleccionado_info
   req(info)
   nodo <- info$id
-  
-  cat("Fitted - ID del nodo:\n")
-  print(shared_data$bn_fitted[[nodo]])
-  
+
+  #cat("Fitted - ID del nodo:\n")
+  #print(shared_data$bn_fitted[[nodo]])
+
   # Extraer el objeto dinámico desde tu red bayesiana
   texto_nodo <- shared_data$bn_fitted[[nodo]]
-  
+
   # Si el nodo seleccionado no tiene datos asociados
   if (is.null(texto_nodo)) {
     texto_nodo <- "Sin datos disponibles"
   } else {
     # 1. Atrapamos el print formateado tal cual sale en la terminal
     salida_consola <- capture.output(print(texto_nodo))
-    
+
     # 2. Juntamos las líneas respetando los saltos de línea originales
     texto_plano <- paste(salida_consola, collapse = "\n")
-    
+
     # 3. Lo envolvemos en HTML con estilo de consola monoespaciada
     texto_nodo <- paste0(
       "<pre style='",
@@ -196,16 +198,17 @@ observeEvent(input$nodo_seleccionado_info, {
     bn <- shared_data$network
     data <- shared_data$dataset
 
-    cat("\n--- FEEDBACK DEL GRAFO ---\n")
-    print(paste("Evento detectado:", res$type))
+    print("Cambio en el grafo detectado:")
+    print(res)
 
-    # Se añade un nuevo nodo al modelo bnlearn y al dataset
-    if (res$type == "addNode") {
-      show_modal("modal_añadir_nodo")
-    }
+    tryCatch({
 
-    if (res$type == "addEdge") {
-      tryCatch({
+      # Se añade un nuevo nodo al modelo bnlearn y al dataset
+      if (res$type == "addNode") {
+        show_modal("modal_añadir_nodo")
+      }
+
+      if (res$type == "addEdge") {
         bn_new <- bnlearn::set.arc(
           bn,
           from = res$data$from,
@@ -213,41 +216,44 @@ observeEvent(input$nodo_seleccionado_info, {
           check.cycles = TRUE
         )
         shared_data$network <- bn_new
-      }, error = function(e) {
-        showNotification(paste(
-          "Error al añadir arista:",
-          e$message
-        ), type = "error")
-      })
-    }
-
-    if (res$type == "deleteNode") {
-
-      # Contamos cuántos IDs vienen en el vector de nodos
-      num_borrados <- length(res$data$nodes)
-
-      # Si solo es uno, lo borramos directamente
-      if (num_borrados == 1) {
-        id_a_borrar <- res$data$nodes[[1]]
-        bn_new <- bnlearn::remove.node(bn, id_a_borrar)
-        data[[id_a_borrar]] <- NULL
-
-      } else if (num_borrados > 1) {
-        # Si el usuario seleccionó varios y los borró de golpe
-        for (id in res$data$nodes) {
-          bn <- bnlearn::remove.node(bn, id)
-          data[[id]] <- NULL
-        }
       }
-      shared_data$dataset <- data
-      shared_data$network <- bn_new
-    }
 
-    if (res$type == "deleteEdge") {
-      bn_new <- bnlearn::drop.arc(bn, from = res$data$from, to = res$data$to)
-      shared_data$network <- bn_new
-    }
-    cat("--------------------------\n")
+      if (res$type == "deleteNode") {
+
+        # Contamos cuántos IDs vienen en el vector de nodos
+        num_borrados <- length(res$data$nodes)
+
+        # Si solo es uno, lo borramos directamente
+        if (num_borrados == 1) {
+          id_a_borrar <- res$data$nodes[[1]]
+          bn_new <- bnlearn::remove.node(bn, id_a_borrar)
+          data[[id_a_borrar]] <- NULL
+
+        } else if (num_borrados > 1) {
+          # Si el usuario seleccionó varios y los borró de golpe
+          for (id in res$data$nodes) {
+            bn <- bnlearn::remove.node(bn, id)
+            data[[id]] <- NULL
+          }
+        }
+        shared_data$dataset <- data
+        shared_data$network <- bn_new
+      }
+
+      if (res$type == "deleteEdge") {
+        # El id de la arista es en formato from-to, por ejemplo "A-B"
+        edge_id <- unlist(res$data$edges)[[1]]
+        nodos_arista <- unlist(strsplit(edge_id, "-"))# vector con los nodos [from, to]
+        args <- list(x = bn, from = nodos_arista[1], to = nodos_arista[2])
+        bn_new <- do.call(bnlearn::drop.arc, args) #bnlearn::drop.arc(bn, from = from, to = to)
+        shared_data$network <- bn_new
+      }
+    }, error = function(e) {
+      showNotification(paste(
+        "Error al modificar el grafo:",
+        e$message
+      ), type = "error")
+    })
   })
 
   # Configuración del nuevo nodo añadido
@@ -265,13 +271,13 @@ observeEvent(input$nodo_seleccionado_info, {
       tipo_dataset <- shared_data$data_type
 
       if (tipo_nodo == "cualitativo") {
-        # CORRECTO: Creamos la columna con NA y le asignamos niveles
+        # Se crea la columna con NA y le asignamos niveles
         new_data[[nombre_nodo]] <- factor(
           rep(NA, nrow(new_data)), 
           levels = unlist(strsplit(niveles, ","))
         )
       } else {
-        # CORRECTO: Creamos la columna como numérica
+        # Se crea la columna como numérica
         new_data[[nombre_nodo]] <- as.numeric(rep(NA, nrow(new_data)))
         # Actualizar información del dataset en shared_data
       }
@@ -281,7 +287,7 @@ observeEvent(input$nodo_seleccionado_info, {
       }
       shared_data$dataset_NAs <- TRUE
       shared_data$dataset <- new_data
-      
+
       # Cerrar el modal automáticamente al terminar
       shiny.semantic::hide_modal(
         id = "modal_añadir_nodo",
