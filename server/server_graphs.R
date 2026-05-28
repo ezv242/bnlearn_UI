@@ -1,49 +1,5 @@
+source("server/server_manipulationGraph.R", local = TRUE)
 server_graphs <- function(input, output, session, shared_data) {
-
-# =========================================================================
-# INYECTAR EL SCRIPT RECEPTOR DE JAVASCRIPT 
-# PARA MOSTRAR CONTENIDO DEL POPUP
-# =========================================================================
-insertUI(
-  selector = "body",
-  where = "afterEnd",
-  ui = tags$script(HTML("
-    Shiny.addCustomMessageHandler('mostrar_mini_popup', function(data) {
-      // Buscamos el contenedor interno del widget de visNetwork
-      var graphContainer = $('.vis-network');
-      
-      // Eliminar cualquier popup anterior para que no se dupliquen
-      $('#nodo-custom-popup').remove();
-      
-      // Construir el HTML del popup con el texto formateado y la posición recibida
-      var popupHtml = `
-        <div id='nodo-custom-popup' class='ui fluid card' style='
-          position: absolute; 
-          z-index: 999; 
-          width: 250px; 
-          box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-          left: ${(data.x + 15)}px; 
-          top: ${(data.y - 40)}px;
-        '>
-          <div class='content' style='padding: 10px;'>
-            <div class='header' style='font-size: 1em; color: #2185d0; margin-bottom: 5px;'>
-              Nodo: ${data.id}
-            </div>
-            <div class='description' style='font-size: 0.9em; font-weight: normal; color: #333; max-height: 150px; overflow-y: auto;'>
-              ${data.texto}
-            </div>
-          </div>
-        </div>
-      `;
-      
-      // Añadirlo al contenedor del grafo
-      graphContainer.append(popupHtml);
-    });
-  ")),
-  immediate = TRUE
-)
-# =========================================================================
-
   # Reactive para almacenar nodos y aristas del grafo
   nodes <- reactiveVal(NULL)
   edges <- reactiveVal(NULL)
@@ -73,113 +29,70 @@ insertUI(
   # Render del grafo
   output$graph <- renderVisNetwork({
     req(nodes(), edges())
-    visNetwork(nodes(), edges(), height = "50%", width = "100%") %>%
-    visNodes(shape = "dot", size = 20) %>%
-    visEdges(arrows = "to") %>%
-    visLayout(randomSeed = 123) %>%
-    visOptions(
-      manipulation = list(
-      enabled = TRUE,
-      addNode = htmlwidgets::JS("function(data, callback) { 
-        Shiny.setInputValue('graph_change', {type: 'addNode', data: data}, {priority: 'event'});
-        callback(null); 
-      }"),
-      addEdge = htmlwidgets::JS("function(data, callback) { 
-        Shiny.setInputValue('graph_change', {type: 'addEdge', data: data}, {priority: 'event'});
-        callback(data); 
-      }"),
-      deleteNode = htmlwidgets::JS("function(data, callback) { 
-        Shiny.setInputValue('graph_change', {type: 'deleteNode', data: data}, {priority: 'event'});
-        callback(data); 
-      }"),
-      deleteEdge = htmlwidgets::JS("function(data, callback) { 
-        Shiny.setInputValue('graph_change', {type: 'deleteEdge', data: data}, {priority: 'event'});
-        callback(data); 
-      }")
-    )) %>%
-    visEvents(
-      selectNode = htmlwidgets::JS("function(properties) {
-        var nodeId = properties.nodes[0];
-        var canvasPosition = this.canvasToDOM(this.getPositions([nodeId])[nodeId]);
-        var graphContainer = $(this.container);
-        
-        $('#nodo-custom-popup').remove();
-        
-        var popupHtml = `
-          <div id='nodo-custom-popup' class='ui fluid card' style='
-            position: absolute; 
-            z-index: 999; 
-            width: 300px; 
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-            left: ${canvasPosition.x + 15}px; 
-            top: ${canvasPosition.y - 40}px;
-          '>
-            <div class='content' style='padding: 10px;'>
-              <div class='header' style='font-size: 1.1em;'>Nodo: ${nodeId}</div>
-              <div class='description' style='font-size: 0.9em; margin-top: 5px; color: rgba(0,0,0,0.6);'>
-                Coordenadas:<br>
-                X: ${Math.round(canvasPosition.x)} | Y: ${Math.round(canvasPosition.y)}
-              </div>
-            </div>
-          </div>
-        `;
-        
-        graphContainer.append(popupHtml);
-        
-        Shiny.setInputValue('nodo_seleccionado_info', {
-          id: nodeId,
-          x: canvasPosition.x,
-          y: canvasPosition.y
-        }, {priority: 'event'});
-      }"),
 
-      deselectNode = htmlwidgets::JS("function(properties) {
-        $('#nodo-custom-popup').remove();
-      }")
-    )
+    visNetwork(nodes(), edges(), height = "50%", width = "100%") %>%
+      visNodes(shape = "dot", size = 20) %>%
+      visEdges(arrows = "to") %>%
+      visLayout(randomSeed = 123) %>%
+      visOptions(
+        manipulation = list(
+          enabled    = TRUE,
+          addNode    = js_add_node,
+          addEdge    = js_add_edge,
+          deleteNode = js_delete_node,
+          deleteEdge = js_delete_edge,
+          editNode   = FALSE,
+          editEdge   = FALSE
+        )
+      ) %>%
+      visEvents(
+        beforeDrawing = js_idioma_es,
+        selectNode    = js_select_node,
+        deselectNode  = js_deselect_node
+      )
   })
 
-observeEvent(input$nodo_seleccionado_info, {
-  info <- input$nodo_seleccionado_info
-  req(info)
-  nodo <- info$id
+  observeEvent(input$nodo_seleccionado_info, {
+    info <- input$nodo_seleccionado_info
+    req(info)
+    nodo <- info$id
 
-  # Extraer el objeto dinámico desde tu red bayesiana
-  texto_nodo <- shared_data$bn_fitted[[nodo]]
+    # Extraer el objeto dinámico desde tu red bayesiana
+    texto_nodo <- shared_data$bn_fitted[[nodo]]
 
-  # Si el nodo seleccionado no tiene datos asociados
-  if (is.null(texto_nodo)) {
-    texto_nodo <- "Sin datos disponibles"
-  } else {
-    # Atrapar el texto tal cual sale en la terminal
-    salida_consola <- capture.output(print(texto_nodo))
-    # Juntar las líneas respetando los saltos de línea originales
-    texto_plano <- paste(salida_consola, collapse = "\n")
-    # Envolver en HTML con estilo de consola monoespaciada
-    texto_nodo <- paste0(
-      "<pre style='",
-      "font-family: monospace, Courier, monospace-all; ",
-      "font-size: 11px; ",
-      "white-space: pre; ",      # Obliga a respetar los espacios múltiples de alineación
-      "margin: 0; ",
-      "background-color: #f8f9fa; ", # Gris sutil de fondo
-      "padding: 8px; ",
-      "border-radius: 4px; ",
-      "overflow-x: auto; ",      # Por si la tabla es muy ancha, añade scroll horizontal interno
-      "color: #333;",
-      "'>", 
-      texto_plano, 
-      "</pre>"
-    )
-  }
-  # Se envía el HTML formateado y la posición de vuelta al navegador
-  session$sendCustomMessage(type = "mostrar_mini_popup", message = list(
-    texto = texto_nodo,
-    x = info$x,
-    y = info$y,
-    id = info$id
-  ))
-})
+    # Si el nodo seleccionado no tiene datos asociados
+    if (is.null(texto_nodo)) {
+      texto_nodo <- "Sin datos disponibles"
+    } else {
+      # Atrapar el texto tal cual sale en la terminal
+      salida_consola <- capture.output(print(texto_nodo))
+      # Juntar las líneas respetando los saltos de línea originales
+      texto_plano <- paste(salida_consola, collapse = "\n")
+      # Envolver en HTML con estilo de consola monoespaciada
+      texto_nodo <- paste0(
+        "<pre style='",
+        "font-family: monospace, Courier, monospace-all; ",
+        "font-size: 11px; ",
+        "white-space: pre; ",      # Obliga a respetar los espacios múltiples de alineación
+        "margin: 0; ",
+        "background-color: #f8f9fa; ", # Gris sutil de fondo
+        "padding: 8px; ",
+        "border-radius: 4px; ",
+        "overflow-x: auto; ",      # Por si la tabla es muy ancha, añade scroll horizontal interno
+        "color: #333;",
+        "'>", 
+        texto_plano, 
+        "</pre>"
+      )
+    }
+    # Se envía el HTML formateado y la posición de vuelta al navegador
+    session$sendCustomMessage(type = "mostrar_mini_popup", message = list(
+      texto = texto_nodo,
+      x = info$x,
+      y = info$y,
+      id = info$id
+    ))
+  })
 
   # Sincronizar cambios visuales con el modelo bnlearn
   observeEvent(input$graph_change, {

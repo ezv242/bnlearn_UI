@@ -2,6 +2,8 @@
 ui_main <- function() {
   semanticPage(
     includeScript("www/js/cpquery_lw.js"),#Llamada al js para las funciones
+    includeScript("www/js/node_popup.js"),
+    includeCSS("www/css/node_popup.css"),
 
     # Barra superior fija
     div(class = "ui top fixed menu",
