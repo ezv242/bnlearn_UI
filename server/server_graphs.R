@@ -12,10 +12,10 @@ insertUI(
       // Buscamos el contenedor interno del widget de visNetwork
       var graphContainer = $('.vis-network');
       
-      // Eliminamos cualquier popup anterior para que no se dupliquen
+      // Eliminar cualquier popup anterior para que no se dupliquen
       $('#nodo-custom-popup').remove();
       
-      // Construimos la tarjeta sutil de Semantic UI con el texto real que viene de R
+      // Construir el HTML del popup con el texto formateado y la posición recibida
       var popupHtml = `
         <div id='nodo-custom-popup' class='ui fluid card' style='
           position: absolute; 
@@ -36,7 +36,7 @@ insertUI(
         </div>
       `;
       
-      // Lo añadimos al lienzo
+      // Añadirlo al contenedor del grafo
       graphContainer.append(popupHtml);
     });
   ")),
@@ -144,9 +144,6 @@ observeEvent(input$nodo_seleccionado_info, {
   req(info)
   nodo <- info$id
 
-  #cat("Fitted - ID del nodo:\n")
-  #print(shared_data$bn_fitted[[nodo]])
-
   # Extraer el objeto dinámico desde tu red bayesiana
   texto_nodo <- shared_data$bn_fitted[[nodo]]
 
@@ -154,13 +151,11 @@ observeEvent(input$nodo_seleccionado_info, {
   if (is.null(texto_nodo)) {
     texto_nodo <- "Sin datos disponibles"
   } else {
-    # 1. Atrapamos el print formateado tal cual sale en la terminal
+    # Atrapar el texto tal cual sale en la terminal
     salida_consola <- capture.output(print(texto_nodo))
-
-    # 2. Juntamos las líneas respetando los saltos de línea originales
+    # Juntar las líneas respetando los saltos de línea originales
     texto_plano <- paste(salida_consola, collapse = "\n")
-
-    # 3. Lo envolvemos en HTML con estilo de consola monoespaciada
+    # Envolver en HTML con estilo de consola monoespaciada
     texto_nodo <- paste0(
       "<pre style='",
       "font-family: monospace, Courier, monospace-all; ",
@@ -177,9 +172,7 @@ observeEvent(input$nodo_seleccionado_info, {
       "</pre>"
     )
   }
-  
   # Se envía el HTML formateado y la posición de vuelta al navegador
-  # Nota: Eliminé 'as.character()' para que no rompa nuestra estructura HTML armada
   session$sendCustomMessage(type = "mostrar_mini_popup", message = list(
     texto = texto_nodo,
     x = info$x,
@@ -284,6 +277,8 @@ observeEvent(input$nodo_seleccionado_info, {
       # Actualizar información del dataset en shared_data
       if(tipo_nodo != tipo_dataset){
         shared_data$data_type <- "mixtos"
+        shared_data$data_continuous <- FALSE
+        shared_data$data_discrete <- FALSE
       }
       shared_data$dataset_NAs <- TRUE
       shared_data$dataset <- new_data

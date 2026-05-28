@@ -229,17 +229,15 @@ getEvidenceFromText <- function(text_str, esLista){
       num <- suppressWarnings(as.numeric(valor)) # Se comprueba si es numérico
       if (!is.na(num)) {
         valor <- num
-      } else {
-        valor <- paste0("'", valor, "'") # Es texto, necesita comillas para el parse
       }
-
-      text_operacion <- paste0("(", nodo, " ", operador, " ", valor, ")")
 
       #Si la salida sera una lista
       if((esLista == TRUE)){
         lista_final[[nodo]] <- valor
       # Si la salida no es una lista se construye el texto
       }else{
+        valor <- paste0("'", valor, "'") # Es texto, necesita comillas para el parse
+        text_operacion <- paste0("(", nodo, " ", operador, " ", valor, ")")
         # Se pega el " & " SOLO si ya había algo guardado en text_final
         if (text_final == "") {
           text_final <- text_operacion

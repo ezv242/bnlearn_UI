@@ -13,8 +13,8 @@ available_method_parameters <- reactive({
   }
 
   data_type <- shared_data$data_type
-  data_continuous <- isTRUE(shared_data$data_continuous)
-  data_discrete <- isTRUE(shared_data$data_discrete)
+  data_continuous <- shared_data$data_continuous
+  data_discrete <- shared_data$data_discrete
 
   if (data_type == "cualitativos" || data_discrete) {
     c("bayes", "mle", "hdir", "hard-em", "")

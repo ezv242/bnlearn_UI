@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages('BiocManager', repos='https://cloud.r-project.org')"
 
 # Instalar paquetes R obligando a fallar si hay errores
-RUN R -e "pkgs <- c('shiny', 'shiny.semantic', 'bnlearn', 'visNetwork', 'readxl'); \
+RUN R -e "pkgs <- c('shiny', 'shiny.semantic', 'bnlearn', 'visNetwork', 'readxl', 'DT'); \
           install.packages(pkgs, repos='https://cloud.r-project.org'); \
           if (!all(pkgs %in% installed.packages()[, 'Package'])) stop('¡Fallo crítico instalando paquetes de R!')"
 
