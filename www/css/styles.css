@@ -1,0 +1,145 @@
+/* www/css/styles.css */
+
+/* Color de fondo global para la aplicación */
+body {
+  background-color: #f4f6f9 !important; 
+}
+
+/* Margen superior para que el contenido no se solape con la barra fija */
+.ui.grid {
+  padding-top: 55px !important; 
+}
+
+
+
+
+/* Estilos para la barra superior fija */
+/* 1. Fondo de la barra superior: Azul Medio-Oscuro Suave */
+.ui.top.fixed.menu {
+  background-color: #214164 !important; /* Un azul corporativo más suave y moderno */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 2. Color del texto: Blanco Limpio */
+.ui.top.fixed.menu .item,
+.ui.top.fixed.menu .item.header,
+.ui.top.fixed.menu .dropdown.item {
+  color: #ffffff !important; 
+  font-weight: 500 !important; 
+}
+
+/* 3. Efecto al pasar el ratón por encima (Hover) */
+.ui.top.fixed.menu .item:hover,
+.ui.top.fixed.menu .dropdown.item:hover {
+  background: rgba(255, 255, 255, 0.1) !important; /* Destello sutil */
+  color: #ffffff !important;
+}
+
+/* 4. Menú desplegable interno (Opciones de Datos) */
+.ui.top.fixed.menu .dropdown .menu {
+  background-color: #ffffff !important; 
+}
+.ui.top.fixed.menu .dropdown .menu .item {
+  color: #333333 !important; /* Texto oscuro para "Asia", "Alarm", etc. */
+  font-weight: normal !important;
+}
+.ui.top.fixed.menu .dropdown .menu .item:hover {
+  background-color: #F3F4F6 !important; 
+  color: #000000 !important;
+}
+
+/* Estilos globales de la página */
+body {
+  background-color: #f4f6f9 !important; 
+}
+
+.ui.grid {
+  padding-top: 55px !important; 
+}
+
+
+
+/* Estilos específicos para el Tabset Azul (ID: #tabset-azul) */
+/* 1. Fondo de la barra de pestañas SOLO dentro de #tabset-azul */
+#tabset-azul .ui.tabular.menu {
+  background-color: #214164 !important; 
+  border-bottom: none !important;       
+  border-radius: 4px 4px 0 0 !important; 
+  padding-left: 10px !important;         
+  margin-bottom: 0 !important;           
+}
+
+/* 2. Pestañas inactivas SOLO dentro de #tabset-azul */
+#tabset-azul .ui.tabular.menu .item {
+  color: rgba(255, 255, 255, 0.8) !important; 
+  background: transparent !important;
+  border: none !important;
+  font-weight: 500 !important;
+  padding: 12px 20px !important;
+  border-bottom: 4px solid transparent !important; 
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* 3. Hover SOLO dentro de #tabset-azul */
+#tabset-azul .ui.tabular.menu .item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important; 
+  color: #ffffff !important;
+}
+
+/* 4. Pestaña ACTIVA SOLO dentro de #tabset-azul */
+#tabset-azul .ui.tabular.menu .item.active {
+  background-color: transparent !important;   
+  color: #ffffff !important;                  
+  font-weight: bold !important;
+  border: none !important;
+  border-radius: 0 !important;
+  
+  /* LÍNEA INFERIOR CON UN VERDE MUCHO MÁS SUTIL */
+  border-bottom: 4px solid #A2D9CE !important; /* <--- Cambia este código HEX si quieres probar los otros */
+}
+
+/* 5. Contenido del Tab activo SOLO dentro de #tabset-azul */
+#tabset-azul .ui.tab.active {
+  background-color: #ffffff !important; 
+  padding: 15px !important;
+  border: 1px solid #ddd !important;
+  border-top: none !important;          
+  border-radius: 0 0 4px 4px !important;
+}
+
+/* www/css/styles.css */
+/* www/css/styles.css */
+
+/* Cabecera idéntica a la imagen pero con bordes casi rectos */
+.titulo-seccion {
+  color: #0B192C !important;            /* Azul oscuro para el texto */
+  background-color: #E6F1FB !important;   /* El azul celeste exacto de tu imagen */
+  display: block !important;            
+  width: calc(100% + 2em) !important;   /* Se expande a los bordes del segmento */
+  
+  /* Ajuste de márgenes para acoplarse arriba perfectamente */
+  margin-top: -1em !important;          
+  margin-left: -1em !important;         
+  margin-bottom: 15px !important;       
+  
+  /* Redondeado mínimo y sutil (casi recto) */
+  border-top-left-radius: 2px !important;  
+  border-top-right-radius: 2px !important;
+  
+  /* Línea inferior azul que divide el título del contenido */
+  border-bottom: 2px solid #214164 !important; 
+  
+  /* Espaciado interno para el texto e icono */
+  padding: 10px 14px !important;       
+  
+  /* Tipografía reducida y estilizada */
+  font-size: 0.9em !important;          
+  font-weight: 600 !important;          
+}
+
+/* Espaciado y color para los iconos que pusimos en R */
+.titulo-contenedor .icon {
+  margin-right: 6px !important;
+  color: #214164 !important;            /* El icono toma el azul medio de la barra */
+}

@@ -7,10 +7,10 @@ ui_sidebar <- function() {
       #style = "display: flex; flex-direction: column; gap: 10px;",
       div(
         class = "ui small header",
-        style = "margin-bottom: 15px;",
+        style = "display: block; margin: 0;",
         div(
-          class = "content",
-          "Carga de la red"
+          class = "content titulo-seccion",
+          tags$i(class = "upload icon"), "Carga de la red"
         )
       ),
       fileInput("datafile", "Selecciona archivo CSV", accept = c(".csv", ".xlsx", "txt", "rds")),
@@ -27,10 +27,10 @@ ui_sidebar <- function() {
       #style = "display: flex; flex-direction: column; gap: 10px;",
       div(
         class = "ui small header",
-        style = "margin-bottom: 15px;",
+        style = "display: block; margin: 0;",
         div(
-          class = "content",
-          "Ajuste de parámetros"
+          class = "content titulo-seccion",
+          tags$i(class = "setting icon"), "Ajuste de parámetros"
         )
       ),
       "Método de ajuste de parámetros:",
@@ -69,10 +69,10 @@ ui_sidebar <- function() {
 
       div(
         class = "ui small header",
-        style = "margin-bottom: 15px;",
+        style = "display: block; margin: 0;",
         div(
-          class = "content",
-          "Inferencia"
+          class = "content titulo-seccion",
+          tags$i(class = "chart line icon"), "Inferencia"
         )
       ),
       ui_inference()
