@@ -269,6 +269,7 @@ server_bnlearn <- function(input, output, session, shared_data) {
   output$tabla_datos <- renderDT({
     datatable(
       shared_data$dataset,
+      editable = TRUE,
       options = list(pageLength = 25), # Muestra 25 filas por página
       filter = "top"                   # Añade filtros por columna arriba
     )

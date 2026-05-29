@@ -9,7 +9,12 @@ ui_main <- function() {
     # Barra superior fija
     div(class = "ui top fixed menu",
 
-      div(class = "item header", "Aplicación BNLearn"),
+      div(class = "item header",
+      tags$img(
+        src = "Logo.png", # Nombre exacto de tu archivo dentro de la carpeta www
+        style = "height: 35px; margin-right: 10px; vertical-align: middle;"
+      ),
+      "Aplicación BNLearn"),
 
       div(
         style = "display: flex; gap: 10px;",

@@ -108,9 +108,7 @@ body {
   border-radius: 0 0 4px 4px !important;
 }
 
-/* www/css/styles.css */
-/* www/css/styles.css */
-
+/* Estilos para los titulos de las secciones en la barra lateral*/
 /* Cabecera idéntica a la imagen pero con bordes casi rectos */
 .titulo-seccion {
   color: #0B192C !important;            /* Azul oscuro para el texto */
@@ -142,4 +140,37 @@ body {
 .titulo-contenedor .icon {
   margin-right: 6px !important;
   color: #214164 !important;            /* El icono toma el azul medio de la barra */
+}
+
+/* Estilos para el contenedor del fileInput */
+/* Solución absoluta: Forzar flexbox a toda la estructura interna del fileInput */
+.custom-file-container,
+.custom-file-container * {
+    max-width: 100% !important;
+}
+
+/* Forzar que el contenedor del input y el botón se alineen en línea elástica */
+.custom-file-container .input-group,
+.custom-file-container [class*="input-group"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+}
+
+/* Forzar a la barra de texto a colapsar todo lo necesario */
+.custom-file-container input[type="text"],
+.custom-file-container .form-control {
+    flex-shrink: 1 !important;
+    flex-grow: 1 !important;
+    min-width: 0 !important;
+    width: 10px !important; /* Fuerza a que ceda el espacio extra al botón */
+}
+
+/* Evitar que el botón se encoja o desaparezca */
+.custom-file-container span,
+.custom-file-container button,
+.custom-file-container .btn {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important; /* Evita que el texto 'Examinar' se rompa en dos líneas */
 }

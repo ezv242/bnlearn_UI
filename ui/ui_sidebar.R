@@ -13,7 +13,14 @@ ui_sidebar <- function() {
           tags$i(class = "upload icon"), "Carga de la red"
         )
       ),
-      fileInput("datafile", "Selecciona archivo CSV", accept = c(".csv", ".xlsx", "txt", "rds")),
+      #fileInput("datafile", "Selecciona archivo CSV", accept = c(".csv", ".xlsx", "txt", "rds")),
+      div(
+        class = "custom-file-container",
+        style = "margin-top: 5px;",
+        fileInput("datafile", "Selecciona archivo CSV",
+                  accept = c(".csv", ".xlsx", "txt", "rds"),
+                  width = "100%")
+      ),
       "Algoritmo de aprendizaje:",
       uiOutput("algorithm_selector"),
       div(

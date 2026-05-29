@@ -9,6 +9,14 @@ ui_results <- function() {
       tabset(
         tabs = list(
           list(
+            menu_item = "Datos",
+            content = segment(
+              mainPanel(
+                DTOutput("tabla_datos")
+              )
+            )
+          ),
+          list(
             menu_item = "Red Bayesiana",
             content = segment(
               class = "ui segment",
@@ -56,14 +64,6 @@ ui_results <- function() {
             content = segment(
               # Evaluación del modelo
               ui_evaluation()
-            )
-          ),
-          list(
-            menu_item = "Datos",
-            content = segment(
-              mainPanel(
-                DTOutput("tabla_datos")
-              )
             )
           )
         )
