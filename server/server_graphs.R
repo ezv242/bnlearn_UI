@@ -70,15 +70,15 @@ server_graphs <- function(input, output, session, shared_data) {
       texto_plano <- paste(salida_consola, collapse = "\n")
       # Envolver en HTML con estilo de consola monoespaciada
       texto_nodo <- paste0(
-        "<pre style='",
+        "<pre style='", # Se diseña la salida para que se vea como en la consola
         "font-family: monospace, Courier, monospace-all; ",
         "font-size: 11px; ",
-        "white-space: pre; ",      # Obliga a respetar los espacios múltiples de alineación
+        "white-space: pre; ",
         "margin: 0; ",
         "background-color: #f8f9fa; ", # Gris sutil de fondo
         "padding: 8px; ",
         "border-radius: 4px; ",
-        "overflow-x: auto; ",      # Por si la tabla es muy ancha, añade scroll horizontal interno
+        "overflow-x: auto; ",      # añade scroll horizontal interno
         "color: #333;",
         "'>", 
         texto_plano, 

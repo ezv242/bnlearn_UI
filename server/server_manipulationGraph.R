@@ -1,10 +1,10 @@
-# JS: Funciones de manipulación para Shiny
+# Funciones de manipulación para Shiny
 js_add_node    <- htmlwidgets::JS("function(d, cb) { Shiny.setInputValue('graph_change', {type: 'addNode', data: d}, {priority: 'event'}); cb(null); }")
 js_add_edge    <- htmlwidgets::JS("function(d, cb) { Shiny.setInputValue('graph_change', {type: 'addEdge', data: d}, {priority: 'event'}); cb(d); }")
 js_delete_node <- htmlwidgets::JS("function(d, cb) { Shiny.setInputValue('graph_change', {type: 'deleteNode', data: d}, {priority: 'event'}); cb(d); }")
 js_delete_edge <- htmlwidgets::JS("function(d, cb) { Shiny.setInputValue('graph_change', {type: 'deleteEdge', data: d}, {priority: 'event'}); cb(d); }")
 
-# JS: Traducción al Español + Fix del botón Edit
+# Traducción al Español
 js_idioma_es <- htmlwidgets::JS("function() {
   if(!this.idiomaConfigurado) {
     this.setOptions({
@@ -29,7 +29,7 @@ js_idioma_es <- htmlwidgets::JS("function() {
   $(this.container).find('.vis-manipulation .vis-edit .vis-label').text('Editar');
 }")
 
-# JS: Comportamiento del Popup Personalizado al seleccionar nodo
+# Comportamiento del Popup Personalizado al seleccionar nodo
 js_select_node <- htmlwidgets::JS("function(properties) {
   var nodeId = properties.nodes[0];
   var canvasPosition = this.canvasToDOM(this.getPositions([nodeId])[nodeId]);
@@ -55,5 +55,5 @@ js_select_node <- htmlwidgets::JS("function(properties) {
   Shiny.setInputValue('nodo_seleccionado_info', {id: nodeId, x: canvasPosition.x, y: canvasPosition.y}, {priority: 'event'});
 }")
 
-# JS: Quitar popup al deseleccionar
+# Quitar popup al deseleccionar
 js_deselect_node <- htmlwidgets::JS("function(properties) { $('#nodo-custom-popup').remove(); }")

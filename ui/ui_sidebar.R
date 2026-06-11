@@ -4,7 +4,6 @@ ui_sidebar <- function() {
     # CARGAR DATOS: El sidebar contiene inputs para cargar datos,
     # seleccionar algoritmos, ajustar parámetros y realizar inferencia
     div(class = "ui segment",
-      #style = "display: flex; flex-direction: column; gap: 10px;",
       div(
         class = "ui small header",
         style = "display: block; margin: 0;",
@@ -13,11 +12,10 @@ ui_sidebar <- function() {
           tags$i(class = "upload icon"), "Carga de la red"
         )
       ),
-      #fileInput("datafile", "Selecciona archivo CSV", accept = c(".csv", ".xlsx", "txt", "rds")),
       div(
         class = "custom-file-container",
         style = "margin-top: 5px;",
-        fileInput("datafile", "Selecciona archivo CSV",
+        fileInput("datafile", "Selecciona archivo csv, xlsx, txt o rds",
                   accept = c(".csv", ".xlsx", "txt", "rds"),
                   width = "100%")
       ),
@@ -31,7 +29,6 @@ ui_sidebar <- function() {
     # AJUSTE PARÁMETROS: Parámetros de ajuste y de inferencia,
     # con visibilidad condicional según el tipo de datos
     div(class = "ui segment",
-      #style = "display: flex; flex-direction: column; gap: 10px;",
       div(
         class = "ui small header",
         style = "display: block; margin: 0;",
@@ -67,10 +64,7 @@ ui_sidebar <- function() {
         action_button("fit_model", "Ajustar Modelo"),
       )
     ),
-
     # INFERENCIA: Inferencia, con inputs para evento, evidencia
-
-    #ui_inference()
     div(
       class = "ui segment",
 

@@ -158,31 +158,24 @@ server_inference <- function(input, output, session, shared_data) {
 
 ##############################################################################
 # Renderizar resultados
-
   observeEvent(input$run_inference, {
     output_result("cpquery")
   })
-
   observeEvent(input$run_cpdist, {
     output_result("cpdist")
   })
-
   output$render_cpquery_text <- renderPrint({
     cpquery() # Evaluamos el eventReactive de cpquery
   })
-
   output$render_cpdist_text <- renderPrint({
     cpdist() # Evaluamos el eventReactive de cpdist
   })
-
   # 4. El renderizado dinámico: SOLO muestra el último que cambió
   output$output_inference <- renderUI({
     req(output_result())
-
     if (output_result() == "cpquery") {
       # Devolvemos el texto de validación cruzada
       verbatimTextOutput("render_cpquery_text")
-
     } else if (output_result() == "cpdist") {
       # Devolvemos, por ejemplo, una tabla u otro texto
       verbatimTextOutput("render_cpdist_text")

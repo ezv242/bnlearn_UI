@@ -93,7 +93,7 @@ ui_evaluation <- function() {
 
           conditionalPanel(
             condition = "input.cv_strategy == 'k-fold'",
-            numericInput("k_cv_fold", "K subgrupos del dataset", min = 1, value = 1)
+            numericInput("k_cv_fold", "K subgrupos del dataset", min = 2, value = 2)
           ),
 
           conditionalPanel(

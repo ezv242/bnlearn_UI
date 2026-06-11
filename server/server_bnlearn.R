@@ -45,14 +45,12 @@ server_bnlearn <- function(input, output, session, shared_data) {
 
   #Reactive para hacer el preprocesamiento de los datos
   observeEvent(input$btn_preprocesar, {
-
     data <- dataset()
     # Se asigna el tipo del dataset
     tipo_datos <- input$tipo_datos
     data_continous <- input$datos_continuo
     graph_dirigido <- input$graph_dirigido
     dataset_NAs <- input$datos_NAs
-
     if (tipo_datos == "cualitativos") {
       shared_data$data_discrete <- TRUE
     }else{
@@ -72,11 +70,7 @@ server_bnlearn <- function(input, output, session, shared_data) {
     # Discretización si se seleccciona esa opción
     discretizacion <- input$discretizacion
     if (discretizacion) {
-
-      #TEMPORAL: Para cambiar el tipo del dataset a discreto
       shared_data$data_discrete <- TRUE
-      ###########################################################
-
       discretization_method <- input$discretization_method
       breaks <- input$breaks
       ordered <- input$ordered
@@ -88,7 +82,6 @@ server_bnlearn <- function(input, output, session, shared_data) {
         ordered = ordered,
         breaks = breaks
       )
-
       if (discretization_method == "hartemink") {
         idisc <- input$input_idisc
         ibreaks <- input$ibreaks
@@ -96,7 +89,6 @@ server_bnlearn <- function(input, output, session, shared_data) {
         args$ibreaks <- ibreaks
         args$idisc <- idisc
       }
-
       tryCatch({
         data <- do.call(bnlearn::discretize, args)
       }, error = function(e) {
@@ -104,13 +96,10 @@ server_bnlearn <- function(input, output, session, shared_data) {
         return(NULL)
       })
     }
-
     # Guardar el dataset preprocesado en shared_data
     shared_data$dataset <- data
-
     # Cerrar el modal automáticamente al terminar
     shiny.semantic::hide_modal(id = "modal_preprocesado", session = shiny::getDefaultReactiveDomain(), asis = TRUE)
-
     # Enviar una notificación de éxito (estilo Semantic UI)
     toast("¡Datos procesados con éxito!", class = "success")
   })
@@ -255,16 +244,6 @@ server_bnlearn <- function(input, output, session, shared_data) {
   observeEvent(bn_model(), {
     shared_data$network <- bn_model()
   })
-
-  # Output de la red, gráfico del bn_model
-  #output$bn_plot <- renderPlot({
-  #  req(bn_model())
-  #  graphviz.plot(bn_model())
-  #})
-
-  #output$network <- renderPrint({
-  #  bn_model()
-  #})
 
   output$tabla_datos <- renderDT({
     datatable(
