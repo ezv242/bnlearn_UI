@@ -14,8 +14,8 @@ tabset(
                     # el exact con redes pequeñas y discretas
                     "Método de inferencia:",
                     dropdown_input("method_inference_cpquery",
-                        choices = c("likelihood weighting", "logic sampling"),
-                        value = "logic sampling"
+                        choices = c("lw", "ls"),
+                        value = "ls"
                     ),
                     checkboxInput("filas_cpquery", "Usar filas como evidencia",
                         value = FALSE
@@ -54,8 +54,8 @@ tabset(
                     style = "display: flex; flex-direction: column; gap: 10px;",
                     "Tabla de muestras cpdist:",
                     dropdown_input("method_inference_cpdist",
-                        choices = c("likelihood weighting", "logic sampling"),
-                        value = "logic sampling"
+                        choices = c("lw", "ls"),
+                        value = "ls"
                     ),
                     checkboxInput("filas_cpdist", "Usar filas como evidencia",
                         value = FALSE

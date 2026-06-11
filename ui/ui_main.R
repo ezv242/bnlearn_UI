@@ -1,9 +1,8 @@
 # ui/ui_main.R
 ui_main <- function() {
   semanticPage(
-    includeScript("www/js/cpquery_lw.js"),#Llamada al js para las funciones
+    includeScript("www/js/rows_selector.js"),#Llamada al js para las funciones
     includeScript("www/js/node_popup.js"),
-    #includeCSS("www/css/node_popup.css"),
     includeCSS("www/css/styles.css"),
 
     # Barra superior fija
