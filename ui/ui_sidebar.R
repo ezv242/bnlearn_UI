@@ -16,7 +16,7 @@ ui_sidebar <- function() {
         class = "custom-file-container",
         style = "margin-top: 5px;",
         fileInput("datafile", "Selecciona archivo csv, xlsx, txt o rds",
-                  accept = c(".csv", ".xlsx", "txt", "rds"),
+                  accept = c(".csv", ".xlsx", ".txt", ".rds"),
                   width = "100%")
       ),
       "Algoritmo de aprendizaje:",

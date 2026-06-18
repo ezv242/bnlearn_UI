@@ -1,16 +1,22 @@
 server_evaluation <- function(input, output, session, shared_data) {
 
 # Reactive para leer los datos de test
-test_dataset <- reactive({
-  req(input$testfile)
-  df <- read.csv(input$testfile$datapath, stringsAsFactors = TRUE)
-  #show_modal("modal_preprocesado")
-  df
-})
 
-# Guardar dataset de test en shared_data
-observe({
-  shared_data$test_dataset <- test_dataset()
+observeEvent(input$testfile, {
+  req(input$testfile)
+  ext <- file_ext(input$testfile$datapath)
+  # Caso 1: archivo subido
+  if (!is.null(input$testfile)) {
+    #df <- read.csv(input$datafile$datapath, stringsAsFactors = TRUE)
+    df <- switch(ext,
+      csv  = read.csv(input$testfile$datapath, stringsAsFactors = TRUE),
+      txt  = read.table(input$testfile$datapath, header = TRUE, stringsAsFactors = TRUE),
+      rds  = readRDS(input$testfile$datapath),
+      xlsx = as.data.frame(readxl::read_excel(input$testfile$datapath)),
+      stop("Formato de archivo no soportado")
+    )
+    shared_data$test_dataset <- df
+  }
 })
 
 # Lista dinámica de métodos score del modelo
