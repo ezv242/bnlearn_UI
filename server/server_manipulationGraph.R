@@ -30,30 +30,30 @@ js_idioma_es <- htmlwidgets::JS("function() {
 }")
 
 # Comportamiento del Popup Personalizado al seleccionar nodo
-js_select_node <- htmlwidgets::JS("function(properties) {
-  var nodeId = properties.nodes[0];
-  var canvasPosition = this.canvasToDOM(this.getPositions([nodeId])[nodeId]);
-  var graphContainer = $(this.container);
-  
-  $('#nodo-custom-popup').remove();
-  
-  var popupHtml = `
-    <div id='nodo-custom-popup' class='ui fluid card' style='
-      position: absolute; z-index: 999; width: 300px; box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
-      left: ${canvasPosition.x + 15}px; top: ${canvasPosition.y - 40}px;
-    '>
-      <div class='content' style='padding: 10px;'>
-        <div class='header' style='font-size: 1.1em;'>Nodo: ${nodeId}</div>
-        <div class='description' style='font-size: 0.9em; margin-top: 5px; color: rgba(0,0,0,0.6);'>
-          Coordenadas:<br>X: ${Math.round(canvasPosition.x)} | Y: ${Math.round(canvasPosition.y)}
-        </div>
-      </div>
-    </div>
-  `;
-  
-  graphContainer.append(popupHtml);
-  Shiny.setInputValue('nodo_seleccionado_info', {id: nodeId, x: canvasPosition.x, y: canvasPosition.y}, {priority: 'event'});
-}")
+js_select_node <- htmlwidgets::JS("
+  function(properties) {
+
+    var nodeId = properties.nodes[0];
+
+    var canvasPosition =
+      this.canvasToDOM(
+        this.getPositions([nodeId])[nodeId]
+      );
+
+    Shiny.setInputValue(
+      'nodo_seleccionado_info',
+      {
+        id: nodeId,
+        x: canvasPosition.x,
+        y: canvasPosition.y
+      },
+      {
+        priority: 'event'
+      }
+    );
+
+  }
+")
 
 # Quitar popup al deseleccionar
 js_deselect_node <- htmlwidgets::JS("function(properties) { $('#nodo-custom-popup').remove(); }")

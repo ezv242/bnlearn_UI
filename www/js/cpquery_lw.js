@@ -94,25 +94,7 @@ function convertirInputDatasetSimple(inputId, nFilas) {
 
     popup.addEventListener("click", (e) => e.stopPropagation());
 
-    // Botón seleccionar todas
-    let allBtn = document.createElement("button");
-    allBtn.textContent = "Seleccionar todas las filas";
-    allBtn.style.display = "block";
-    allBtn.style.marginBottom = "6px";
-
-    allBtn.onclick = (e) => {
-      e.stopPropagation();
-
-      for (let i = 0; i < nFilas; i++) {
-        if (!Array.from(tagContainer.children).some(t => parseInt(t.dataset.index) === i)) {
-          addTag(i);
-        }
-      }
-
-      popup.remove();
-    };
-
-    popup.appendChild(allBtn);
+    // === SE ELIMINÓ EL BLOQUE DEL BOTÓN "SELECCIONAR TODAS" ===
 
     // Botones individuales
     for (let i = 0; i < nFilas; i++) {

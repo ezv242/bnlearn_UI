@@ -10,9 +10,6 @@ body {
   padding-top: 55px !important; 
 }
 
-
-
-
 /* Estilos para la barra superior fija */
 /* 1. Fondo de la barra superior: Azul Medio-Oscuro Suave */
 .ui.top.fixed.menu {
@@ -57,8 +54,6 @@ body {
 .ui.grid {
   padding-top: 55px !important; 
 }
-
-
 
 /* Estilos específicos para el Tabset Azul (ID: #tabset-azul) */
 /* 1. Fondo de la barra de pestañas SOLO dentro de #tabset-azul */
@@ -179,7 +174,9 @@ body {
 .node-popup {
     position: absolute;
     z-index: 999;
-    width: 250px;
+    min-width: 260px;
+    max-width: 380px;
+    width: fit-content;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
