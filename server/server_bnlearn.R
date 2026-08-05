@@ -13,7 +13,11 @@ server_bnlearn <- function(input, output, session, shared_data) {
         csv  = read.csv(input$datafile$datapath, stringsAsFactors = TRUE),
         txt  = read.table(input$datafile$datapath, header = TRUE, stringsAsFactors = TRUE),
         rds  = readRDS(input$datafile$datapath),
-        xlsx = as.data.frame(readxl::read_excel(input$datafile$datapath)),
+        #xlsx = as.data.frame(readxl::read_excel(input$datafile$datapath)),
+        xlsx = {
+          temp_df <- as.data.frame(readxl::read_excel(input$datafile$datapath))
+          as.data.frame(lapply(temp_df, as.factor))
+        },
         stop("Formato de archivo no soportado")
       )
       show_modal("modal_preprocesado")
